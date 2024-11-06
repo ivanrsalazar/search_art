@@ -13,6 +13,7 @@
     width: 66.66%;
     height: 90vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -21,38 +22,59 @@
 
 .artwork-image img {
     max-width: 100%;
-    max-height: 100%;
+    max-height: 90%;
     object-fit: contain;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.image-size {
+    margin-top: 10px;
+    font-size: 1em;
+    color: #555;
+}
+
 .artwork-details {
     width: 33.33%;
     padding: 20px;
-    background-color: #f9f9f9;
-    overflow-y: auto;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    /* Distributes space equally */
+    background-color: #f9f9f9;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .artwork-details h2 {
-    margin-top: 0;
+    font-size: 1.8em;
     margin-bottom: 20px;
-    color: #333333;
+    text-align: center;
 }
 
 .detail-item {
-    margin-bottom: 25px;
-    /* Increased spacing between fields */
+    font-size: 1.1em;
+    line-height: 1.6;
 }
 
-.detail-item strong {
-    color: #555555;
+.download-options {
+    margin-top: 20px;
 }
 
-.download-button {
+.download-options label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.download-options select {
+    padding: 5px;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.download-button,
+.back-button,
+.back-to-images-button {
     display: inline-block;
     margin-top: 20px;
     padding: 10px 15px;
@@ -62,73 +84,13 @@
     border-radius: 4px;
     font-size: 1.1em;
     text-align: center;
+    cursor: pointer;
+    margin-bottom: 10px;
+    /* Additional space between buttons */
 }
 
-.download-button:hover {
+.download-button:hover,
+.back-button:hover,
+.back-to-images-button:hover {
     background-color: #45a049;
-}
-
-.back-link {
-    margin-top: auto;
-    text-decoration: none;
-    color: #007BFF;
-    font-weight: bold;
-    margin-top: 20px;
-    /* Added spacing above the back link */
-}
-
-.back-link:hover {
-    text-decoration: underline;
-}
-
-/* Spinner Styles */
-
-.spinner {
-    border: 8px solid #f3f3f3;
-    border-top: 8px solid #3498db;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 2s linear infinite;
-    margin: 100px auto;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .artwork-detail-container {
-        flex-direction: column;
-        height: auto;
-        width: 100vw;
-        padding: 10px;
-    }
-
-    .artwork-image,
-    .artwork-details {
-        width: 100%;
-        height: auto;
-    }
-
-    .artwork-image {
-        height: auto;
-        margin-bottom: 20px;
-    }
-
-    .artwork-details {
-        box-shadow: none;
-        padding: 10px;
-    }
-
-    .back-link {
-        margin-top: 20px;
-    }
 }

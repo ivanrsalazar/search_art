@@ -32,79 +32,60 @@ def get_artwork_details(artwork_id):
     else:
         response.raise_for_status()
 
-def get_image(artwork, high_res=True):
+# artworks/views.py
+
+def get_image(artwork, size="1686,"):
     image_id = artwork.get('image_id')
     if image_id:
-        size = "1686," if high_res else "843,"
+        # Construct the URL for the requested size
         image_url = f'https://www.artic.edu/iiif/2/{image_id}/full/{size}/0/default.jpg'
         
         response = requests.get(image_url)
         
-        if response.status_code != 200 and high_res:
+        # Fallback to 843 size if the requested size is unavailable
+        if response.status_code != 200 and size == "1686,":
             size = "843,"
             image_url = f'https://www.artic.edu/iiif/2/{image_id}/full/{size}/0/default.jpg'
             response = requests.get(image_url)
         
-        if response.status_code == 200:
+        # Check if the response has content before processing
+        if response.status_code == 200 and response.content:
             nparr = np.frombuffer(response.content, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
-            avg_color_per_row = np.average(img, axis=0)
-            avg_color = np.average(avg_color_per_row, axis=0).astype(int)
-            avg_color_hex = '#{:02x}{:02x}{:02x}'.format(avg_color[2], avg_color[1], avg_color[0])
+            if img is not None:
+                # Get the actual dimensions of the image
+                height, width = img.shape[:2]
+                actual_size = f"{width}x{height}"
 
-            _, buffer = cv2.imencode('.jpg', img)
-            img_base64 = base64.b64encode(buffer).decode('utf-8')
-            
-            return img_base64, avg_color_hex
+                # Convert image to base64
+                _, buffer = cv2.imencode('.jpg', img)
+                img_base64 = base64.b64encode(buffer).decode('utf-8')
+                
+                return img_base64, actual_size
     
-    return None, "#ffffff"
+    # Return None if the image could not be fetched or decoded
+    return None, "0x0"
 
 
-@api_view(['GET'])
+
 def artwork_search_view(request):
-    print(request)
     search_term = request.GET.get('q', '')
     if not search_term:
         return JsonResponse({'error': 'No search term provided'}, status=400)
 
-    # Fetch artworks from external API
-    search_url = f'https://api.artic.edu/api/v1/artworks/search?q={search_term}&limit=100'
-    response = requests.get(search_url)
-    if response.status_code != 200:
-        return JsonResponse({'error': 'Failed to fetch data from external API'}, status=500)
-
-    artworks_data = response.json().get('data', [])[:25]
-    ids = [artwork['id'] for artwork in artworks_data]
-
-    # Select 10 random artworks
-    random_ids = random.sample(ids, min(10, len(ids)))
+    artworks_data = search_artworks(search_term, limit=100)[:25]
+    random.shuffle(artworks_data)
 
     images = []
-    for artwork_id in random_ids:
-        artwork_details_url = f'https://api.artic.edu/api/v1/artworks/{artwork_id}?fields=id,title,image_id'
-        details_response = requests.get(artwork_details_url)
-        if details_response.status_code != 200:
-            continue  # Skip if details can't be fetched
-
-        artwork = details_response.json().get('data', {})
-        image_id = artwork.get('image_id')
-        if not image_id:
-            continue  # Skip if no image_id
-
-        image_url = f'https://www.artic.edu/iiif/2/{image_id}/full/843,/0/default.jpg'
-        image_response = requests.get(image_url)
-        if image_response.status_code != 200:
-            continue  # Skip if image can't be fetched
-
-        # Convert image to base64
-        image_base64 = base64.b64encode(image_response.content).decode('utf-8')
-
-        images.append({
-            'id': artwork_id,
-            'title': artwork.get('title', 'Untitled'),
-            'image': image_base64
-        })
+    for artwork_data in artworks_data:
+        if len(images) >= 10:
+            break
+        artwork = get_artwork_details(artwork_data['id'])
+        img, _ = get_image(artwork)
+        if img:
+            title = artwork.get('title', 'Untitled')
+            images.append({'id': artwork_data['id'], 'title': title, 'image': img})
 
     return JsonResponse({'images': images})
 
@@ -130,3 +111,19 @@ def artwork_detail_view(request, artwork_id):
         'image_id': artwork.get('image_id', ''),
     }
     return Response(context)
+
+def get_image_view(request):
+    image_id = request.GET.get('image_id')
+    size = request.GET.get('size', '1686,')  # Default size if not specified
+    
+    # Assuming we have an artwork dictionary for demonstration
+    artwork = {'image_id': image_id}
+    
+    # Use the existing get_image function to retrieve the image
+    img_base64, actual_size = get_image(artwork, size)
+    
+    # Return the image data and actual size in JSON format
+    return JsonResponse({
+        'img_base64': img_base64,
+        'actual_size': actual_size
+    })
