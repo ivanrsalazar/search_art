@@ -1,0 +1,134 @@
+/* frontend/src/assets/styles/ArtworkDetail.css */
+
+.artwork-detail-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    padding: 20px;
+    background-color: #ffffff;
+}
+
+.artwork-image {
+    width: 66.66%;
+    height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 10px;
+}
+
+.artwork-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.artwork-details {
+    width: 33.33%;
+    padding: 20px;
+    background-color: #f9f9f9;
+    overflow-y: auto;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.artwork-details h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333333;
+}
+
+.detail-item {
+    margin-bottom: 25px;
+    /* Increased spacing between fields */
+}
+
+.detail-item strong {
+    color: #555555;
+}
+
+.download-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+.download-button:hover {
+    background-color: #45a049;
+}
+
+.back-link {
+    margin-top: auto;
+    text-decoration: none;
+    color: #007BFF;
+    font-weight: bold;
+    margin-top: 20px;
+    /* Added spacing above the back link */
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+/* Spinner Styles */
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 2s linear infinite;
+    margin: 100px auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .artwork-detail-container {
+        flex-direction: column;
+        height: auto;
+        width: 100vw;
+        padding: 10px;
+    }
+
+    .artwork-image,
+    .artwork-details {
+        width: 100%;
+        height: auto;
+    }
+
+    .artwork-image {
+        height: auto;
+        margin-bottom: 20px;
+    }
+
+    .artwork-details {
+        box-shadow: none;
+        padding: 10px;
+    }
+
+    .back-link {
+        margin-top: 20px;
+    }
+}

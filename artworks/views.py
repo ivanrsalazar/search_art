@@ -7,6 +7,14 @@ import random
 import base64
 import cv2
 from django.shortcuts import get_object_or_404
+from django.shortcuts import render
+from .models import Artwork  # Replace with your actual model or data source
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+# artworks/views.py
+
+
 
 def search_artworks(search_term, limit=100):
     search_url = f'https://api.artic.edu/api/v1/artworks/search?q={search_term}&limit={limit}'
@@ -24,53 +32,79 @@ def get_artwork_details(artwork_id):
     else:
         response.raise_for_status()
 
-# artworks/views.py
 def get_image(artwork, high_res=True):
     image_id = artwork.get('image_id')
     if image_id:
-        # Try fetching the high-resolution image
         size = "1686," if high_res else "843,"
         image_url = f'https://www.artic.edu/iiif/2/{image_id}/full/{size}/0/default.jpg'
         
         response = requests.get(image_url)
         
-        # If the high-res fetch fails, fall back to default size
         if response.status_code != 200 and high_res:
-            size = "843,"  # Default resolution
+            size = "843,"
             image_url = f'https://www.artic.edu/iiif/2/{image_id}/full/{size}/0/default.jpg'
             response = requests.get(image_url)
         
         if response.status_code == 200:
             nparr = np.frombuffer(response.content, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            avg_color_per_row = np.average(img, axis=0)
+            avg_color = np.average(avg_color_per_row, axis=0).astype(int)
+            avg_color_hex = '#{:02x}{:02x}{:02x}'.format(avg_color[2], avg_color[1], avg_color[0])
+
             _, buffer = cv2.imencode('.jpg', img)
             img_base64 = base64.b64encode(buffer).decode('utf-8')
-            return img_base64
-    return None
+            
+            return img_base64, avg_color_hex
+    
+    return None, "#ffffff"
 
 
-
+@api_view(['GET'])
 def artwork_search_view(request):
+    print(request)
     search_term = request.GET.get('q', '')
     if not search_term:
         return JsonResponse({'error': 'No search term provided'}, status=400)
 
-    # Fetch up to 100 results and limit to the first 25
-    artworks_data = search_artworks(search_term, limit=100)[:25]
-    ids = [item['id'] for item in artworks_data]
+    # Fetch artworks from external API
+    search_url = f'https://api.artic.edu/api/v1/artworks/search?q={search_term}&limit=100'
+    response = requests.get(search_url)
+    if response.status_code != 200:
+        return JsonResponse({'error': 'Failed to fetch data from external API'}, status=500)
 
-    # Select a random 10 from the first 25
+    artworks_data = response.json().get('data', [])[:25]
+    ids = [artwork['id'] for artwork in artworks_data]
+
+    # Select 10 random artworks
     random_ids = random.sample(ids, min(10, len(ids)))
 
     images = []
-    for id in random_ids:
-        artwork = get_artwork_details(id)
-        img = get_image(artwork)
-        if img is not None:
-            title = artwork.get('title', 'Untitled')
-            images.append({'id': id, 'title': title, 'image': img})
-            if len(images) == 10:
-                break
+    for artwork_id in random_ids:
+        artwork_details_url = f'https://api.artic.edu/api/v1/artworks/{artwork_id}?fields=id,title,image_id'
+        details_response = requests.get(artwork_details_url)
+        if details_response.status_code != 200:
+            continue  # Skip if details can't be fetched
+
+        artwork = details_response.json().get('data', {})
+        image_id = artwork.get('image_id')
+        if not image_id:
+            continue  # Skip if no image_id
+
+        image_url = f'https://www.artic.edu/iiif/2/{image_id}/full/843,/0/default.jpg'
+        image_response = requests.get(image_url)
+        if image_response.status_code != 200:
+            continue  # Skip if image can't be fetched
+
+        # Convert image to base64
+        image_base64 = base64.b64encode(image_response.content).decode('utf-8')
+
+        images.append({
+            'id': artwork_id,
+            'title': artwork.get('title', 'Untitled'),
+            'image': image_base64
+        })
 
     return JsonResponse({'images': images})
 
@@ -79,21 +113,20 @@ def home_view(request):
 
 
 # artworks/views.py
+
+@api_view(['GET'])
 def artwork_detail_view(request, artwork_id):
     artwork = get_artwork_details(artwork_id)
-    if not artwork:
-        return render(request, '404.html', status=404)  # Return a 404 page if the artwork is not found
+    image, avg_color = get_image(artwork)
 
-    # Get high-resolution image
-    img_base64 = get_image(artwork, high_res=True)
-    
     context = {
         'title': artwork.get('title', 'Untitled'),
-        'artist': artwork.get('artist_display', 'Unknown'),
-        'date': artwork.get('date_display', 'Date Unknown'),
-        'dimensions': artwork.get('dimensions', 'N/A'),
-        'medium': artwork.get('medium_display', 'N/A'),
-        'image': img_base64,
-        'image_id': artwork.get('image_id')
+        'artist': artwork.get('artist_display', ''),
+        'date': artwork.get('date_display', ''),
+        'dimensions': artwork.get('dimensions', ''),
+        'medium': artwork.get('medium_display', ''),
+        'image': image,
+        'avg_color': avg_color,
+        'image_id': artwork.get('image_id', ''),
     }
-    return render(request, 'artworks/detail.html', context)
+    return Response(context)
