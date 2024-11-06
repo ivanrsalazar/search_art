@@ -1,0 +1,88 @@
+<!-- artworks/templates/artworks/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Search</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Styling for the loading spinner */
+        #loading-spinner {
+            display: none;
+            font-size: 24px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Grid layout styling */
+        #results {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #results div {
+            text-align: center;
+        }
+
+        #results img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Search for Artworks</h1>
+    <input type="text" id="search-input" placeholder="Enter search term">
+    <button onclick="searchArtworks()">Search</button>
+
+    <!-- Loading spinner icon -->
+    <div id="loading-spinner">Loading...</div>
+
+    <!-- Results grid -->
+    <div id="results"></div>
+
+    <script>
+        function searchArtworks() {
+            const searchTerm = $('#search-input').val();
+            if (!searchTerm) {
+                alert("Please enter a search term.");
+                return;
+            }
+
+            // Show the loading spinner and clear previous results
+            $('#loading-spinner').show();
+            $('#results').empty();
+
+            $.ajax({
+                url: '/search/',
+                data: { q: searchTerm },
+                success: function (response) {
+                    $('#loading-spinner').hide(); // Hide loading spinner on success
+                    if (response.images && response.images.length > 0) {
+                        response.images.forEach(item => {
+                            $('#results').append(`
+                                <div>
+                                    <h4><a href="/artwork/${item.id}/">${item.title}</a></h4>
+                                    <a href="/artwork/${item.id}/"><img src="data:image/jpeg;base64,${item.image}" alt="${item.title}"></a>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        $('#results').append('<p>No images found.</p>');
+                    }
+                },
+                error: function () {
+                    $('#loading-spinner').hide(); // Hide loading spinner on error
+                    $('#results').html('<p>An error occurred. Please try again.</p>');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
