@@ -8,17 +8,15 @@ function ArtworkDetail() {
     const navigate = useNavigate();
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
-    const previousSearch = searchParams.get('search'); // Retrieve previous search term
-
-    console.log("Previous Search:", previousSearch); // Debugging line
+    const previousSearch = searchParams.get('search');
 
     const [artwork, setArtwork] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [actualSize, setActualSize] = useState('');
-    const [downloadSize, setDownloadSize] = useState('1686,');
+    const [downloadSize, setDownloadSize] = useState('');
     const [downloadUrl, setDownloadUrl] = useState('');
-    const [downloadOptions, setDownloadOptions] = useState(['1686,', '843,', '600,', '400,', '200,']);
+    const [downloadOptions, setDownloadOptions] = useState([]);
 
     useEffect(() => {
         axios
@@ -26,7 +24,7 @@ function ArtworkDetail() {
             .then((response) => {
                 setArtwork(response.data);
                 setLoading(false);
-                fetchDisplayedImage(response.data.image_id, "1686,");
+                fetchDisplayedImage(response.data.image_id, '1686,');
             })
             .catch((error) => {
                 console.error('Error fetching artwork details:', error);
@@ -41,11 +39,23 @@ function ArtworkDetail() {
             .then((response) => {
                 const { img_base64, actual_size } = response.data;
                 setActualSize(actual_size);
-                setDownloadUrl(`https://www.artic.edu/iiif/2/${image_id}/full/${downloadSize}/0/default.jpg`);
+                const [width, height] = actual_size.split('x').map(Number);
+                const aspectRatio = width / height;
 
-                if (actual_size.startsWith("843")) {
-                    setDownloadOptions(['843,', '600,', '400,', '200,']);
-                }
+                // Generate download options
+                const sizes = ['1686,', '843,', '600,', '400,', '200,'];
+                const availableSizes = sizes.filter((s) => parseInt(s) <= width);
+
+                const newDownloadOptions = availableSizes.map((s) => {
+                    const w = parseInt(s);
+                    const h = Math.round(w / aspectRatio);
+
+                    return { sizeParam: s, displayLabel: `${w}x${h}` };
+                });
+
+                setDownloadOptions(newDownloadOptions);
+                setDownloadSize(newDownloadOptions[0].sizeParam);
+                setDownloadUrl(`https://www.artic.edu/iiif/2/${image_id}/full/${newDownloadOptions[0].sizeParam}/0/default.jpg`);
             })
             .catch((error) => console.error('Error fetching displayed image:', error));
     };
@@ -64,8 +74,13 @@ function ArtworkDetail() {
 
             const blobUrl = URL.createObjectURL(response.data);
             const link = document.createElement('a');
+
+            // Find the selected download option to get the width and height
+            const currentOption = downloadOptions.find(option => option.sizeParam === downloadSize);
+            const dimensions = currentOption.displayLabel; // e.g., "600x400"
+
             link.href = blobUrl;
-            link.download = `${artwork.title || 'artwork'}_${downloadSize}.jpg`;
+            link.download = `${artwork.title || 'artwork'}_${dimensions}.jpg`; // Include dimensions in the filename
             document.body.appendChild(link);
             link.click();
             URL.revokeObjectURL(blobUrl);
@@ -95,7 +110,9 @@ function ArtworkDetail() {
                     <label htmlFor="size-select">Download Size:</label>
                     <select id="size-select" value={downloadSize} onChange={handleDownloadSizeChange}>
                         {downloadOptions.map((option) => (
-                            <option key={option} value={option}>{option}</option>
+                            <option key={option.sizeParam} value={option.sizeParam}>
+                                {option.displayLabel}
+                            </option>
                         ))}
                     </select>
                 </div>
