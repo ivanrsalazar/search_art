@@ -1,76 +1,74 @@
-// frontend/src/components/Home.js
+// src/components/Home.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import '../assets/styles/Home.css';
+import '../assets/styles/Home.css'; // Ensure you have corresponding styles
 
 function Home() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [loading, setLoading] = useState(false);
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const previousSearch = searchParams.get('q') || '';
+
+    const [artworks, setArtworks] = useState([]); // Initialize as an empty array
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-    const [results, setResults] = useState([]);
-    const [searched, setSearched] = useState(false);
 
-    const searchArtworks = () => {
-        if (!searchTerm) {
-            alert("Please enter a search term.");
-            return;
-        }
+    useEffect(() => {
+        // Define an async function to fetch artworks
+        const fetchArtworks = async () => {
+            try {
+                const response = await axios.get(`/api/artwork_search_view/?q=${encodeURIComponent(previousSearch)}`);
 
-        setLoading(true);
-        setError(false);
-        setResults([]);
-        setSearched(true);
+                // Debugging: Log the entire response
+                console.log('Backend response:', response.data);
 
-        axios
-            .get(`/api/search/`, { params: { q: searchTerm } })
-            .then((response) => {
-                setLoading(false);
-                setResults(response.data.images.slice(0, 10)); // Limit to 10 images for 2x5 grid
-            })
-            .catch((error) => {
-                console.error('Error fetching artworks:', error);
+                // Safeguard: Ensure 'images' exists and is an array
+                if (response.data && Array.isArray(response.data.images)) {
+                    setArtworks(response.data.images);
+                } else {
+                    console.warn('Received data without "images" array:', response.data);
+                    setArtworks([]); // Set to empty array if 'images' is missing
+                }
+            } catch (err) {
+                console.error('Error fetching artworks:', err);
                 setError(true);
+                setArtworks([]); // Optional: Reset artworks on error
+            } finally {
                 setLoading(false);
-            });
-    };
+            }
+        };
+
+        // Call the async function
+        fetchArtworks();
+    }, [previousSearch]);
+
+    if (loading) return <div className="spinner">Loading...</div>;
+    if (error) return <div className="error">Error loading artworks.</div>;
 
     return (
         <div className="home-container">
-            {!results.length > 0 && (
-                <div className="search-bar-container">
-                    <h1>Search for Artworks</h1>
-                    <input
-                        type="text"
-                        id="search-input"
-                        placeholder="Enter search term"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <button onClick={searchArtworks}>Search</button>
+            <h1>Art Search Results</h1>
+            {artworks.length === 0 ? (
+                <p>No artworks found for "{previousSearch}"</p>
+            ) : (
+                <div className="artwork-list">
+                    {artworks.map((artwork) => (
+                        <Link
+                            key={`${artwork.source}-${artwork.id}`} // Ensure uniqueness
+                            to={`/artwork/${artwork.id}?source=${artwork.source}&search=${encodeURIComponent(previousSearch)}`}
+                            className="artwork-link"
+                        >
+                            <img
+                                src={artwork.source === 'harvard' ? artwork.image : `data:image/jpeg;base64,${artwork.image}`}
+                                alt={artwork.title}
+                                className="artwork-image"
+                            />
+                            <h3 className="artwork-title">{artwork.title}</h3>
+                        </Link>
+                    ))}
                 </div>
             )}
-
-            {loading && <div className="spinner"></div>}
-            {error && <p className="center-message">An error occurred while fetching artworks.</p>}
-
-            <div id="results">
-                {results.length > 0 ? (
-                    results.map((item) => (
-                        <div key={item.id} className="image-container">
-                            <Link to={`/artwork/${item.id}?search=${searchTerm}`}>
-                                <img src={`data:image/jpeg;base64,${item.image}`} alt={item.title} />
-                                <div className="image-title">{item.title}</div>
-                            </Link>
-                        </div>
-                    ))
-                ) : (
-                    searched && !loading && !error && (
-                        <p className="center-message">No images found.</p>
-                    )
-                )}
-            </div>
         </div>
     );
 }

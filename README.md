@@ -10,3 +10,5 @@
 - Europeana [https://pro.europeana.eu/resources/apis/search]
 - Harvard Art Museum [https://github.com/harvardartmuseums/api-docs]
 - MoMa [https://metmuseum.github.io/]
+- Artsy [https://developers.artsy.net/]
+- WikiArt [https://www.wikiart.org/]
