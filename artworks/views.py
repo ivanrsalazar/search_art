@@ -83,18 +83,19 @@ async def artwork_search_view(request):
 
 
     return JsonResponse({'images': images})
-
+'''
 def home_view(request):
     return render(request, 'artworks/home.html')
+'''
 
 @api_view(['GET'])
 async def artwork_detail_view(request, artwork_id):
     source = request.GET.get('source', 'aic')  # Default to AIC
     if source == 'aic':
         # Use your ArticAPI to fetch details
-        artic_api = ArticAPI(api_key=settings.ARTIC_API_KEY)
+        artic_api = ArticAPI()
         try:
-            artwork = await artic_api.get_single_artwork(int(artwork_id))
+            artwork = await artic_api.get('/')
         except Exception as e:
             return Response({'error': f'Error fetching artwork: {str(e)}'}, status=500)
     elif source == 'harvard':
