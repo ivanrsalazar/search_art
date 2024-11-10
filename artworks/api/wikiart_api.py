@@ -5,6 +5,7 @@ import cv2
 from artwork import Artwork
 import requests
 import os
+import time
 class WikiArtAPI(BaseAPI):
     """
     API client for the WikiArt API.
@@ -62,7 +63,7 @@ class WikiArtAPI(BaseAPI):
             details = self.get(endpoint=endpoint,params=params)
             artwork.medium = " ".join(details.get('media',[]))
             artwork.dimensions = f"{details['sizeX']}cm x {details['sizeY']}cm"
-            artwork.image = self.get_image(artwork.image_url)
+            #artwork.image = self.get_image(artwork.image_url)
         pass
 
 
@@ -92,8 +93,14 @@ class WikiArtAPI(BaseAPI):
 
 
 wikiart_api = WikiArtAPI()
+start_time = time.perf_counter()
 results = wikiart_api.search_artworks("warhol")
+end_time = time.perf_counter()
+elapsed_time = end_time - start_time
+print(f"response time: {elapsed_time}")
 
-artworks = wikiart_api.get_artworks(results)
-for artwork in artworks:
-    print(artwork)
+start_time = time.perf_counter()
+wikiart_api.get_artworks(results)
+end_time = time.perf_counter()
+elapsed_time = end_time - start_time
+print(f"process time: {elapsed_time}")

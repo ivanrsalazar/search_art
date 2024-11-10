@@ -65,10 +65,11 @@
                     $('#loading-spinner').hide(); // Hide loading spinner on success
                     if (response.images && response.images.length > 0) {
                         response.images.forEach(item => {
+                            console.log(item.image_url);
                             $('#results').append(`
                                 <div>
                                     <h4><a href="/artwork/${item.id}/">${item.title}</a></h4>
-                                    <a href="/artwork/${item.id}/"><img src="data:image/jpeg;base64,${item.image}" alt="${item.title}"></a>
+                                    <a href="/artwork/${item.id}/"><img src="${item.image_url}" alt="${item.title}"></a>
                                 </div>
                             `);
                         });

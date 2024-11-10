@@ -5,7 +5,7 @@ import cv2
 from artwork import Artwork
 import requests
 import os
-
+import time
 class HewittAPI(BaseAPI):
     """
     API client for the Cooper Hewitt API
@@ -13,6 +13,9 @@ class HewittAPI(BaseAPI):
 
     def __init__(self, api_key: Optional[str] = None):
         super().__init__(base_url="https://api.collection.cooperhewitt.org/rest/", api_key=api_key)
+
+    
+    
 
     def search_artworks(self, query):
         """
@@ -24,12 +27,24 @@ class HewittAPI(BaseAPI):
             "access_token": self.api_key,
             "query": query,
             "has_images": "true",  # Ensuring we only get items with images
-            "per_page": 75
-            # Additional filters can be added here, e.g., accession_number, color, etc
+            "per_page": 25
         }
-        endpoint=""
-        json_response = self.get(endpoint=endpoint,params=params)
-        return json_response.get("objects",[])
+        endpoint = ""
+
+        # Start the timer
+        start_time = time.perf_counter()
+
+        # Perform the GET request
+        json_response = self.get(endpoint=endpoint, params=params)
+
+        # Stop the timer
+        end_time = time.perf_counter()
+
+        # Calculate elapsed time
+        elapsed_time = end_time - start_time
+        print(f"GET request took {elapsed_time:.4f} seconds")
+
+        return json_response.get("objects", [])
 
 
     def get_artworks(self,objects):
@@ -70,6 +85,6 @@ class HewittAPI(BaseAPI):
 api_key = os.getenv("HEWITT_API_KEY")
 hewitt_api = HewittAPI(api_key=api_key)
 results = hewitt_api.search_artworks("dieter")
-artworks = hewitt_api.get_artworks(results)
+
 
 

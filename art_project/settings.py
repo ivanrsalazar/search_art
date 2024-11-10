@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 HARVARD_API_KEY = os.environ.get('HARVARD_API_KEY')
+ARTSY_PUBLIC_KEY = os.getenv('ARTSY_PUBLIC_KEY')
+ARTSY_PRIVATE_KEY = os.getenv('ARTSY_PRIVATE_KEY')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,6 +28,7 @@ SECRET_KEY = 'django-insecure-hv$k7)esy&e(xk+-*qpa(27h$0o%5)nco)pkr1#@lqps70t5pm
 DEBUG = True
 
 ALLOWED_HOSTS = []
+ASGI_APPLICATION = 'art_project.asgi.application'
 
 # Application definition
 
@@ -58,7 +61,7 @@ ROOT_URLCONF = 'art_project.urls'
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3001',  # React development server
+    'http://localhost:8004',  # React development server
 ]
 
 # Templates Configuration

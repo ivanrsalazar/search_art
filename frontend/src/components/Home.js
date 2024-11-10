@@ -18,7 +18,8 @@ function Home() {
         // Define an async function to fetch artworks
         const fetchArtworks = async () => {
             try {
-                const response = await axios.get(`/api/artwork_search_view/?q=${encodeURIComponent(previousSearch)}`);
+                // Update the API endpoint to match your Django urls.py
+                const response = await axios.get(`/search/?q=${encodeURIComponent(previousSearch)}`);
 
                 // Debugging: Log the entire response
                 console.log('Backend response:', response.data);
@@ -53,20 +54,29 @@ function Home() {
                 <p>No artworks found for "{previousSearch}"</p>
             ) : (
                 <div className="artwork-list">
-                    {artworks.map((artwork) => (
-                        <Link
-                            key={`${artwork.source}-${artwork.id}`} // Ensure uniqueness
-                            to={`/artwork/${artwork.id}?source=${artwork.source}&search=${encodeURIComponent(previousSearch)}`}
-                            className="artwork-link"
-                        >
-                            <img
-                                src={artwork.source === 'harvard' ? artwork.image : `data:image/jpeg;base64,${artwork.image}`}
-                                alt={artwork.title}
-                                className="artwork-image"
-                            />
-                            <h3 className="artwork-title">{artwork.title}</h3>
-                        </Link>
-                    ))}
+                    {artworks.map((artwork) => {
+                        // Log each image_url before rendering
+                        console.log(`Artwork ID ${artwork.id} Image URL:`, artwork.image_url);
+
+                        return (
+                            <Link
+                                key={`${artwork.source}-${artwork.id}`} // Ensure uniqueness
+                                to={`/artwork/${artwork.id}?source=${artwork.source}&search=${encodeURIComponent(previousSearch)}`}
+                                className="artwork-link"
+                            >
+                                <img
+                                    src={`${artwork.image_url}`}// Use 'image_url' directly
+                                    alt={artwork.title}
+                                    className="artwork-image"
+                                    onError={(e) => {
+                                        e.target.onerror = null; // Prevents infinite loop
+                                        e.target.src = 'https://via.placeholder.com/200x200?text=No+Image'; // Placeholder image
+                                    }}
+                                />
+                                <h3 className="artwork-title">{artwork.title}</h3>
+                            </Link>
+                        );
+                    })}
                 </div>
             )}
         </div>

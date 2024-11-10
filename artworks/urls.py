@@ -1,7 +1,7 @@
 # artworks/urls.py
 
 from django.urls import path
-from .views import artwork_search_view, home_view, artwork_detail_view, get_image_view
+from .views import home_view, artwork_search_view, artwork_detail_view, get_image_view
 
 urlpatterns = [
     path('', home_view, name='home'),
