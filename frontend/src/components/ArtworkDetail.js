@@ -1,4 +1,3 @@
-// ArtworkDetail.js
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../assets/styles/ArtworkDetail.css';
@@ -25,6 +24,10 @@ function ArtworkDetail() {
     // If artwork data is missing, show an error message
     if (!artwork) return <div className="error">Artwork details are missing.</div>;
 
+    const handleBackToResults = () => {
+        navigate('/');
+    };
+
     return (
         <div className="artwork-detail-container">
             <div className="artwork-image">
@@ -41,8 +44,8 @@ function ArtworkDetail() {
                     Download Image
                 </button>
 
-                <button onClick={() => navigate(-1)} className="back-button">
-                    Back to Search
+                <button onClick={handleBackToResults} className="back-button">
+                    Back to Results
                 </button>
             </div>
         </div>

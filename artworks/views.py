@@ -5,21 +5,29 @@ from django.http import JsonResponse
 from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import permissions, status
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from .api.serializers import ArtworkSerializer
 import asyncio
 import random
 import base64
 import cv2
 from .api.artic_api import ArticAPI
 from .api.artsy_api import ArtsyAPI
+from .models import Artwork
 
 # Initialize logger
 logger = logging.getLogger('artworks')
+
 
 async def artwork_search_view(request):
     """
     Asynchronous view to search for artworks using both ArticAPI and ArtsyAPI.
     """
     search_term = request.GET.get('q', '')
+    page = request.GET.get('page','1')
     if not search_term:
         logger.debug("No search term provided.")
         return JsonResponse({'error': 'No search term provided'}, status=400)
@@ -32,8 +40,8 @@ async def artwork_search_view(request):
         # Perform concurrent searches
         logger.debug(f"Searching for artworks with term: '{search_term}'")
         artic_results, artsy_results = await asyncio.gather(
-            artic_api.search_artworks(search_term),
-            artsy_api.search_artworks(search_term)
+            artic_api.search_artworks(search_term, int(page)),
+            artsy_api.search_artworks(search_term, int(page))
         )
         logger.debug(f"ArticAPI returned {len(artic_results)} results.")
         logger.debug(f"ArtsyAPI returned {len(artsy_results)} results.")
@@ -50,7 +58,7 @@ async def artwork_search_view(request):
         logger.debug(f"ArticAPI processed {len(artworks_artic)} artworks.")
         logger.debug(f"ArtsyAPI processed {len(artworks_artsy)} artworks.")
     except Exception as e:
-        logger.error(f"Error retrieving artworks: {str(e)}")
+        print(f"Error retrieving artworks: {str(e)}")
         return JsonResponse({'error': f'Error retrieving artworks: {str(e)}'}, status=500)
 
     # Combine and shuffle artworks from both sources
@@ -59,28 +67,27 @@ async def artwork_search_view(request):
     logger.debug(f"Combined artworks count: {len(combined_artworks)}")
 
     # Limit to 10 artworks
-    limited_artworks = combined_artworks[:10]
+    limited_artworks = combined_artworks # Limit to 10 artworks
     logger.debug(f"Limited to {len(limited_artworks)} artworks.")
     
     # Prepare the data for JSON response
     images = []
+    urls_seen = set()
     incomplete_artworks = 0
+    print(f"length of combined artworks: {len(combined_artworks)}")
+    # Serialize the artworks that are not duplicates
     for artwork in limited_artworks:
-        print(artwork.image_url)
-        images.append({
-            'id': artwork.id,
-            'title': artwork.title,
-            'artist': artwork.artist,
-            'date': artwork.date,
-            'medium': artwork.medium,
-            'dimensions': artwork.dimensions,
-            'image_url': artwork.image_url,
-            'source': artwork.api_source,
-        })
-       
-    print(len(images))
-    logger.debug(f"Returning {len(images)} images. Skipped {incomplete_artworks} incomplete artworks.")
+        if artwork.image_url in urls_seen:
+            print(f"url seen: {artwork.image_url}")
+            continue
+        urls_seen.add(artwork.image_url)
 
+        # Serialize the artwork using the ArtworkSerializer
+        serialized_artwork = ArtworkSerializer(artwork).data
+        images.append(serialized_artwork)
+    
+    print(f"number of artworks returned: {len(images)}")
+    logger.debug(f"Returning {len(images)} images. Skipped {incomplete_artworks} incomplete artworks.")
 
     return JsonResponse({'images': images})
 '''
@@ -139,4 +146,40 @@ async def get_image_view(request):
     return JsonResponse({
         'img_base64': img_base64,
         'actual_size': actual_size
+    })
+
+# Register User
+@api_view(['POST'])
+def register(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+        
+        return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+
+# Login User and return JWT token
+@api_view(['POST'])
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    user = authenticate(username=username, password=password)
+    
+    if user is None:
+        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    refresh = RefreshToken.for_user(user)
+    access_token = refresh.access_token
+
+    return Response({
+        "access": str(access_token),
+        "refresh": str(refresh)
     })

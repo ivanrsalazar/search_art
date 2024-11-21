@@ -4,13 +4,15 @@ from django.urls import path, re_path, include
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import artwork_search_view, artwork_detail_view, get_image_view
+from .views import artwork_search_view, artwork_detail_view, get_image_view, register, login
 import os
 
 urlpatterns = [
     path('api/search/', artwork_search_view, name='artwork_search'),
     path('api/artwork/<int:artwork_id>/', artwork_detail_view, name='artwork_detail'),
     path('api/get-image/', get_image_view, name='get_image'),
+    path('api/register/', register, name='register'),
+    path('api/login/', login, name='login'),
 ]
 
 if settings.DEBUG:

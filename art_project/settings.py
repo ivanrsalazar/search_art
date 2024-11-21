@@ -42,9 +42,15 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
     # Your apps
     'artworks',
 ]
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Must be at the top
@@ -61,7 +67,7 @@ ROOT_URLCONF = 'art_project.urls'
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3003',  # React development server
+    'http://localhost:62447',  # React development server
 ]
 
 # Templates Configuration
