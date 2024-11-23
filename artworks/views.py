@@ -147,35 +147,38 @@ async def get_image_view(request):
         'img_base64': img_base64,
         'actual_size': actual_size
     })
-
-# Register User
 @api_view(['POST'])
 def register(request):
-    if request.method == 'POST':
-        username = request.data.get('username')
-        email = request.data.get('email')
-        password = request.data.get('password')
-        
-        # Check if username already exists
-        if User.objects.filter(username=username).exists():
-            return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        user = User.objects.create_user(username=username, email=email, password=password)
-        user.save()
-        
-        return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+    """
+    Endpoint to register a new user.
+    """
+    username = request.data.get('username')
+    email = request.data.get('email')
+    password = request.data.get('password')
 
-# Login User and return JWT token
+    if User.objects.filter(username=username).exists():
+        return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if User.objects.filter(email=email).exists():
+        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.create_user(username=username, email=email, password=password)
+    user.save()
+    return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+
+
 @api_view(['POST'])
 def login(request):
+    """
+    Endpoint to log in a user and return JWT tokens.
+    """
     username = request.data.get('username')
     password = request.data.get('password')
-    
+
     user = authenticate(username=username, password=password)
-    
     if user is None:
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-    
+
     refresh = RefreshToken.for_user(user)
     access_token = refresh.access_token
 
@@ -183,3 +186,4 @@ def login(request):
         "access": str(access_token),
         "refresh": str(refresh)
     })
+

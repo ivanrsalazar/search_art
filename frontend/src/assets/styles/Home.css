@@ -11,7 +11,30 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    /* Centers the content vertically */
+    position: relative;
+    /* Ensure relative positioning for top-right links */
+}
+
+/* ======= Top-Right Links ======= */
+.top-right-links {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 15px;
+}
+
+.top-right-link {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.top-right-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
 }
 
 h1 {
@@ -311,11 +334,8 @@ h1 {
     top: 0;
     left: 0;
     width: 100%;
-    /* Modal takes the full width of the page */
     height: 100%;
-    /* Modal takes the full height of the page */
     background-color: rgba(0, 0, 0, 0.7);
-    /* Dark background */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -325,12 +345,9 @@ h1 {
 .artwork-modal-content {
     display: flex;
     flex-direction: row;
-    /* Align artwork and buttons side by side */
     background-color: #fff;
     width: 100%;
-    /* Modal content takes up 80% of the page width */
     height: 100%;
-    /* Modal content takes up 80% of the page height */
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -338,18 +355,15 @@ h1 {
 
 .artwork-image {
     flex: 2;
-    /* The artwork takes up 2/3 of the modal's width */
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
-    /* Add padding for better spacing */
     overflow: hidden;
 }
 
 .artwork-details {
     flex: 1;
-    /* The details and buttons take up 1/3 of the modal */
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -363,9 +377,7 @@ h1 {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    /* Keep aspect ratio of the image */
     object-position: center;
-    /* Ensure the image is centered */
 }
 
 .detail-item {
@@ -394,4 +406,173 @@ h1 {
 
 .close-button:hover {
     background-color: #c82333;
+}
+
+.home-container {
+    padding: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+}
+
+.top-right-links {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 15px;
+}
+
+.top-right-link {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.top-right-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.header {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.auth-links {
+    display: flex;
+    gap: 10px;
+}
+
+.login-link,
+.register-link,
+.logout-button {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.logout-button:hover,
+.login-link:hover,
+.register-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Add these styles to your Home.css */
+
+/* Username Display */
+.username-display {
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Logout Button */
+.logout-button {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+    transition: color 0.3s ease;
+}
+
+.logout-button:hover {
+    color: #c82333;
+}
+
+/* Like Button Styles */
+.like-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: transform 0.2s ease;
+
+
+}
+
+.like-button:hover {
+    transform: scale(1.2);
+}
+
+.like-button:focus {
+    outline: none;
+}
+
+/* Adjust the overlay to accommodate the like button */
+.artwork-title-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    /* Increased height to fit the like button */
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 10px;
+    box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.artwork-title {
+    margin: 0;
+    font-size: 18px;
+    text-align: left;
+}
+
+.artwork-details .like-button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 32%;
+    /* Fixed width to ensure it does not grow */
+    position: absolute;
+    right: 1%;
+    /* Positioning the button */
+    top: 62%;
+    transition: background-color 0.3s ease;
+    /* Only background-color change on hover */
+    transform: none;
+    /* Prevent scaling or transformation */
+}
+
+.artwork-details .like-button:hover {
+    background-color: darkred;
+    /* Change to dark red when hovered */
+    transform: none;
+    /* Prevent size change */
+}
+
+.artwork-item:hover .like-button {
+    opacity: 1;
+    /* Ensure opacity doesn't affect the button size */
+    transform: none;
+    /* Prevent any scaling on hover */
 }

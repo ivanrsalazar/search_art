@@ -1,0 +1,21 @@
+/* src/assets/styles/LikeButton.css */
+
+.like-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+}
+
+.like-button:hover {
+    transform: scale(1.2);
+}
+
+.like-button:focus {
+    outline: none;
+}

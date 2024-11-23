@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// src/components/Home.js
+import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../assets/styles/Home.css';
+import { AuthContext } from '../AuthContext'; // Import AuthContext
+
+// Import LikeButton component
+import LikeButton from './LikeButton';
 
 function Home() {
+    const { loggedIn, username, logout } = useContext(AuthContext); // Consume AuthContext
     const location = useLocation();
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
@@ -16,24 +22,44 @@ function Home() {
     const [showSearch, setShowSearch] = useState(true);
     const [pageOffset, setPageOffset] = useState(1);
     const [allLoaded, setAllLoaded] = useState(false);
-    const [selectedArtwork, setSelectedArtwork] = useState(null); // State for selected artwork to display in modal
+    const [selectedArtwork, setSelectedArtwork] = useState(null);
 
-    const artworkUrls = useRef(new Set()); // Use ref to keep track of unique URLs
-    const isFetching = useRef(false); // Prevent multiple requests at once
+    const artworkUrls = useRef(new Set());
+    const isFetching = useRef(false);
 
-    // Fetch artworks with API and page offset
+    // State for Liked Artworks
+    const [likedArtworks, setLikedArtworks] = useState(() => {
+        // Initialize from localStorage
+        const storedLikes = localStorage.getItem('likedArtworks');
+        return storedLikes ? JSON.parse(storedLikes) : [];
+    });
+
+    // Function to toggle like
+    const toggleLike = (imageUrl) => {
+        setLikedArtworks((prevLikes) => {
+            let updatedLikes;
+            if (prevLikes.includes(imageUrl)) {
+                // Unlike
+                updatedLikes = prevLikes.filter((url) => url !== imageUrl);
+            } else {
+                // Like
+                updatedLikes = [...prevLikes, imageUrl];
+            }
+            // Update localStorage
+            localStorage.setItem('likedArtworks', JSON.stringify(updatedLikes));
+            return updatedLikes;
+        });
+    };
+
     const fetchArtworks = useCallback(async (offset) => {
-        if (isFetching.current || !previousSearch.trim()) {
-            return; // Prevent request if it's already fetching or search term is empty
-        }
+        if (isFetching.current || !previousSearch.trim()) return;
 
-        isFetching.current = true; // Set fetching flag to true
+        isFetching.current = true;
         setLoading(true);
         setError(false);
 
         try {
             const url = `http://localhost:8013/api/search/?q=${encodeURIComponent(previousSearch)}&page=${offset}`;
-            console.log("Fetching URL:", url);  // Log the URL being requested
             const response = await axios.get(url);
 
             if (response.data && Array.isArray(response.data.images)) {
@@ -43,10 +69,8 @@ function Home() {
                     return true;
                 });
 
-                // Append new images to existing artworks
                 setArtworks((prevArtworks) => [...prevArtworks, ...newArtworks]);
 
-                // Check if there are no more images to load
                 if (newArtworks.length < 10) {
                     setAllLoaded(true);
                 }
@@ -54,27 +78,22 @@ function Home() {
                 setAllLoaded(true);
             }
         } catch (err) {
-            console.error("Error making API call:", err);
             setError(true);
             setAllLoaded(true);
         } finally {
             setLoading(false);
-            isFetching.current = false; // Reset fetching flag after the request completes
+            isFetching.current = false;
             setShowSearch(false);
         }
     }, [previousSearch]);
 
-    // Handle search term changes and initial fetch
     useEffect(() => {
-        console.log("Previous Search Term:", previousSearch);
-
         if (!previousSearch.trim()) {
             setArtworks([]);
             setLoading(false);
             return;
         }
 
-        // Reset if search term changes
         const previousStoredSearch = sessionStorage.getItem('previousSearch');
         if (previousStoredSearch !== previousSearch) {
             sessionStorage.removeItem('searchResults');
@@ -82,33 +101,29 @@ function Home() {
             setArtworks([]);
             setPageOffset(1);
             setAllLoaded(false);
-            fetchArtworks(1);  // Fetch first page of results when search term changes
+            fetchArtworks(1);
         } else {
-            // Load from session storage if available
             const storedArtworks = sessionStorage.getItem('searchResults');
             if (storedArtworks) {
                 setArtworks(JSON.parse(storedArtworks));
                 setShowSearch(false);
                 setLoading(false);
             } else {
-                fetchArtworks(1);  // Fetch first page of results if no stored data
+                fetchArtworks(1);
             }
         }
     }, [previousSearch, fetchArtworks]);
 
-    // Function to handle "Load More" button click
     const handleLoadMore = () => {
         const newPageOffset = pageOffset + 1;
         setPageOffset(newPageOffset);
         fetchArtworks(newPageOffset);
     };
 
-    // Open artwork details in modal
     const openArtworkDetailModal = (artwork) => {
         setSelectedArtwork(artwork);
     };
 
-    // Close artwork details modal
     const closeArtworkDetailModal = () => {
         setSelectedArtwork(null);
     };
@@ -129,6 +144,20 @@ function Home() {
 
     return (
         <div className="home-container">
+            <div className="top-right-links">
+                {loggedIn ? (
+                    <>
+                        <span className="username-display">Hello, {username}!</span>
+                        <button onClick={logout} className="logout-button">Logout</button>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/login" className="top-right-link">Login</Link>
+                        <Link to="/register" className="top-right-link">Register</Link>
+                    </>
+                )}
+            </div>
+
             {showSearch && <h1>Art Search</h1>}
             {showSearch ? (
                 <form onSubmit={handleSubmit} className="search-form">
@@ -154,8 +183,8 @@ function Home() {
             {artworks.length > 0 && (
                 <div className="artwork-list">
                     {artworks.map((artwork, index) => (
-                        <div key={`${artwork.image_url}-${index}`} onClick={() => openArtworkDetailModal(artwork)}>
-                            <div className="artwork-item">
+                        <div key={`${artwork.image_url}-${index}`} className="artwork-container">
+                            <div className="artwork-item" onClick={() => openArtworkDetailModal(artwork)}>
                                 <img
                                     src={artwork.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}
                                     alt={artwork.title}
@@ -165,6 +194,11 @@ function Home() {
                                 />
                                 <div className="artwork-title-overlay">
                                     <h3 className="artwork-title">{artwork.title}</h3>
+                                    {/* Like Button */}
+                                    <LikeButton
+                                        isLiked={likedArtworks.includes(artwork.image_url)}
+                                        onToggle={() => toggleLike(artwork.image_url)}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -172,17 +206,15 @@ function Home() {
                 </div>
             )}
 
-            {/* "Load More" button */}
             {!allLoaded && !loading && (
                 <button onClick={handleLoadMore} className="load-more-button">
                     Load More
                 </button>
             )}
 
-            {/* Modal to show artwork details */}
             {selectedArtwork && (
-                <div className="artwork-modal">
-                    <div className="artwork-modal-content">
+                <div className="artwork-modal" onClick={closeArtworkDetailModal}>
+                    <div className="artwork-modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="artwork-image">
                             <img src={selectedArtwork.image_url} alt={selectedArtwork.title} className="artwork-image" />
                         </div>
@@ -192,6 +224,12 @@ function Home() {
                             <div className="detail-item"><strong>Date:</strong> <br />{selectedArtwork.date}</div>
                             <div className="detail-item"><strong>Dimensions:</strong> <br />{selectedArtwork.dimensions}</div>
                             <div className="detail-item"><strong>Medium:</strong> <br />{selectedArtwork.medium}</div>
+
+                            {/* Like Button in Modal */}
+                            <LikeButton
+                                isLiked={likedArtworks.includes(selectedArtwork.image_url)}
+                                onToggle={() => toggleLike(selectedArtwork.image_url)}
+                            />
 
                             <button onClick={() => {
                                 const link = document.createElement('a');
