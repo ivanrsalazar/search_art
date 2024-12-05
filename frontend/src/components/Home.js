@@ -28,27 +28,48 @@ function Home() {
     const isFetching = useRef(false);
 
     // State for Liked Artworks
-    const [likedArtworks, setLikedArtworks] = useState(() => {
-        // Initialize from localStorage
-        const storedLikes = localStorage.getItem('likedArtworks');
-        return storedLikes ? JSON.parse(storedLikes) : [];
-    });
+    // Modified: Initialize as empty array instead of using localStorage
+    const [likedArtworks, setLikedArtworks] = useState([]);
 
-    // Function to toggle like
     const toggleLike = (imageUrl) => {
-        setLikedArtworks((prevLikes) => {
-            let updatedLikes;
-            if (prevLikes.includes(imageUrl)) {
-                // Unlike
-                updatedLikes = prevLikes.filter((url) => url !== imageUrl);
-            } else {
-                // Like
-                updatedLikes = [...prevLikes, imageUrl];
-            }
-            // Update localStorage
-            localStorage.setItem('likedArtworks', JSON.stringify(updatedLikes));
-            return updatedLikes;
-        });
+        console.log('Before Toggle:', likedArtworks); // Log current state
+
+        if (likedArtworks.includes(imageUrl)) {
+            const url = `http://localhost:8014/api/likes/${encodeURIComponent(imageUrl)}/`;
+            axios.delete(url, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            })
+                .then(() => {
+                    setLikedArtworks((prevLikes) => {
+                        const updatedLikes = prevLikes.filter((url) => url !== imageUrl);
+                        console.log('After Unlike:', updatedLikes); // Log updated state
+                        return updatedLikes;
+                    });
+                })
+                .catch(err => {
+                    console.error('Error unliking artwork:', err);
+                });
+        } else {
+            const url = `http://localhost:8014/api/likes/`;
+            console.log('Sending Authorization:', localStorage.getItem('accessToken'));
+            axios.post(url, { image_url: imageUrl }, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            })
+                .then(() => {
+                    setLikedArtworks((prevLikes) => {
+                        const updatedLikes = [...prevLikes, imageUrl];
+                        console.log('After Like:', updatedLikes); // Log updated state
+                        return updatedLikes;
+                    });
+                })
+                .catch(err => {
+                    console.error('Error liking artwork:', err);
+                });
+        }
     };
 
     const fetchArtworks = useCallback(async (offset) => {
@@ -59,7 +80,7 @@ function Home() {
         setError(false);
 
         try {
-            const url = `http://localhost:8013/api/search/?q=${encodeURIComponent(previousSearch)}&page=${offset}`;
+            const url = `http://localhost:8014/api/search/?q=${encodeURIComponent(previousSearch)}&page=${offset}`;
             const response = await axios.get(url);
 
             if (response.data && Array.isArray(response.data.images)) {
@@ -113,6 +134,35 @@ function Home() {
             }
         }
     }, [previousSearch, fetchArtworks]);
+
+    // New useEffect to fetch liked artworks when logged in
+    useEffect(() => {
+        const fetchLikedArtworks = async () => {
+            try {
+                const url = `http://localhost:8014/api/likes/user/`;
+                const response = await axios.get(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    }
+                });
+
+                if (response.data && Array.isArray(response.data)) {
+                    // Extract image URLs from the liked artworks
+                    const likedUrls = response.data.map(like => like.artwork.image_url);
+                    console.log(likedUrls);
+                    setLikedArtworks(likedUrls);
+                }
+            } catch (err) {
+                console.error('Error fetching liked artworks:', err);
+            }
+        };
+
+        if (loggedIn) {
+            fetchLikedArtworks();
+        } else {
+            setLikedArtworks([]); // Clear liked artworks when logged out
+        }
+    }, [loggedIn]);
 
     const handleLoadMore = () => {
         const newPageOffset = pageOffset + 1;

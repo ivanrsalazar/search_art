@@ -5,6 +5,11 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import artwork_search_view, artwork_detail_view, get_image_view, register, login
+from .views import (
+    LikeArtworkView,
+    UnlikeArtworkView,
+    UserLikedArtworksView,
+)
 import os
 
 urlpatterns = [
@@ -13,6 +18,9 @@ urlpatterns = [
     path('api/get-image/', get_image_view, name='get_image'),
     path('api/register/', register, name='register'),
     path('api/login/', login, name='login'),
+    path('api/likes/user/', UserLikedArtworksView.as_view(), name='user-liked-artworks'),  # GET user's liked artworks
+    path('api/likes/', LikeArtworkView.as_view(), name='like-artwork'),  # POST to like an artwork
+    path('api/likes/<path:image_url>/', UnlikeArtworkView.as_view(), name='unlike-artwork'),  # DELETE to unlike an artwork
 ]
 
 if settings.DEBUG:

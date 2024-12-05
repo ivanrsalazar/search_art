@@ -50,6 +50,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
 }
 
 MIDDLEWARE = [
@@ -62,12 +68,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default authentication backend
+]
 ROOT_URLCONF = 'art_project.urls'
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:62447',  # React development server
+    'http://localhost:52408',  # React development server
 ]
 
 # Templates Configuration
@@ -117,6 +125,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -144,3 +154,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')       # Directory to collect
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),  # Adjust as needed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,  # Ensure SECRET_KEY is set
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}

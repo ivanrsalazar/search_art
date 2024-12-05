@@ -41,9 +41,14 @@ class Artwork(models.Model):
         verbose_name_plural = 'Artworks'
 
 
-class ArtworkLike(models.Model):
-    artwork = models.ForeignKey(
-        Artwork,
-        on_delete=models.CASCADE,
-        to_field='image_url',  # Use the new primary key
-    )
+
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE, related_name='liked_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'artwork')  # Prevents a user from liking the same artwork multiple times
+
+    def __str__(self):
+        return f'{self.user.username} likes {self.artwork.title}'

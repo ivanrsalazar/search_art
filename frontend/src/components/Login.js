@@ -27,7 +27,7 @@ function Login() {
         setError(null);
 
         try {
-            const response = await fetch('/api/login/', { // Ensure this URL is correct
+            const response = await fetch('http://localhost:8014/api/login/', { // Ensure this URL is correct
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

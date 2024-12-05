@@ -3,20 +3,28 @@ import logging
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework import permissions, status
+from rest_framework import permissions, status, generics
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from .api.serializers import ArtworkSerializer
+from .api.serializers import ArtworkSerializer, LikeSerializer
 import asyncio
 import random
+import urllib.parse
 import base64
 import cv2
 from .api.artic_api import ArticAPI
 from .api.artsy_api import ArtsyAPI
-from .models import Artwork
+from .models import Artwork, Like
+
+
 
 # Initialize logger
 logger = logging.getLogger('artworks')
@@ -168,10 +176,12 @@ def register(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login(request):
     """
     Endpoint to log in a user and return JWT tokens.
     """
+    print(request)
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -181,9 +191,65 @@ def login(request):
 
     refresh = RefreshToken.for_user(user)
     access_token = refresh.access_token
-
+    print(f"access token: {access_token}")
     return Response({
         "access": str(access_token),
         "refresh": str(refresh)
     })
+
+
+# API endpoint to like an artwork
+class LikeArtworkView(generics.CreateAPIView):
+    serializer_class = LikeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, *args, **kwargs):
+        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
+        image_url = request.data.get('image_url')  # Get the image_url from the request body
+        if not image_url:
+            return Response({'error': 'Artwork image_url is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            artwork = Artwork.objects.get(image_url=image_url)
+        except Artwork.DoesNotExist:
+            return Response({'error': 'Artwork not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Add like
+        like, created = Like.objects.get_or_create(user=request.user, artwork=artwork)
+        if not created:
+            return Response({'error': 'Artwork already liked.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = LikeSerializer(like)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class UnlikeArtworkView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, image_url, format=None):
+        """
+        Handles the deletion of a Like object based on image_url.
+        """
+        # Decode the image_url if it's URL-encoded
+        decoded_image_url = urllib.parse.unquote(image_url)
+
+        try:
+            artwork = Artwork.objects.get(image_url=decoded_image_url)
+        except Artwork.DoesNotExist:
+            return Response({'error': 'Artwork not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            like = Like.objects.get(user=request.user, artwork=artwork)
+            like.delete()
+            return Response({'message': 'Artwork unliked successfully.'}, status=status.HTTP_200_OK)
+        except Like.DoesNotExist:
+            return Response({'error': 'Like not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+# API endpoint to get liked artworks of the current user
+class UserLikedArtworksView(generics.ListAPIView):
+    serializer_class = LikeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        print("UserLikedArtworksView: Received GET request")
+        return Like.objects.filter(user=self.request.user)
 
