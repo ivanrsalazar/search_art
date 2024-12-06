@@ -9,6 +9,7 @@ from .views import (
     LikeArtworkView,
     UnlikeArtworkView,
     UserLikedArtworksView,
+    twitter_login, twitter_callback, post_tweet
 )
 import os
 
@@ -21,6 +22,9 @@ urlpatterns = [
     path('api/likes/user/', UserLikedArtworksView.as_view(), name='user-liked-artworks'),  # GET user's liked artworks
     path('api/likes/', LikeArtworkView.as_view(), name='like-artwork'),  # POST to like an artwork
     path('api/likes/<path:image_url>/', UnlikeArtworkView.as_view(), name='unlike-artwork'),  # DELETE to unlike an artwork
+    path('api/twitter/login/', twitter_login, name='twitter-login'),
+    path('api/twitter/callback/', twitter_callback, name='twitter-callback'),
+    path('api/twitter/post/', post_tweet, name='post-tweet'),
 ]
 
 if settings.DEBUG:

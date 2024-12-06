@@ -166,3 +166,7 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,  # Ensure SECRET_KEY is set
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+TWITTER_API_KEY = os.getenv('TWITTER_API_KEY')
+TWITTER_API_SECRET_KEY = os.getenv('TWITTER_SECRET_API_KEY')
+TWITTER_CALLBACK_URL = 'http://localhost:8014/api/twitter/callback/'  # Adjust for production

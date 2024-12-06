@@ -1,7 +1,7 @@
 # artworks/views.py
 import logging
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -23,6 +23,7 @@ import cv2
 from .api.artic_api import ArticAPI
 from .api.artsy_api import ArtsyAPI
 from .models import Artwork, Like
+from requests_oauthlib import OAuth1Session
 
 
 
@@ -253,3 +254,89 @@ class UserLikedArtworksView(generics.ListAPIView):
         print("UserLikedArtworksView: Received GET request")
         return Like.objects.filter(user=self.request.user)
 
+
+# Step 1: Redirect to Twitter for Authentication
+def twitter_login(request):
+    oauth = OAuth1Session(
+        settings.TWITTER_API_KEY,
+        client_secret=settings.TWITTER_API_SECRET_KEY,
+        callback_uri=settings.TWITTER_CALLBACK_URL
+    )
+    try:
+        # Obtain request token
+        request_token = oauth.fetch_request_token("https://api.twitter.com/oauth/request_token")
+        request.session['oauth_token'] = request_token.get('oauth_token')
+        request.session['oauth_token_secret'] = request_token.get('oauth_token_secret')
+
+        # Redirect user to Twitter for authentication
+        authorization_url = oauth.authorization_url("https://api.twitter.com/oauth/authorize")
+        return HttpResponseRedirect(authorization_url)
+    except Exception as e:
+        return JsonResponse({"error": f"Error during Twitter login: {str(e)}"}, status=500)
+
+
+# Step 2: Handle Twitter Callback
+def twitter_callback(request):
+    oauth_token = request.GET.get('oauth_token')
+    oauth_verifier = request.GET.get('oauth_verifier')
+    stored_oauth_token = request.session.get('oauth_token')
+    stored_oauth_token_secret = request.session.get('oauth_token_secret')
+
+    if oauth_token != stored_oauth_token:
+        return JsonResponse({"error": "Invalid OAuth token"}, status=400)
+
+    oauth = OAuth1Session(
+        settings.TWITTER_API_KEY,
+        client_secret=settings.TWITTER_API_SECRET_KEY,
+        resource_owner_key=stored_oauth_token,
+        resource_owner_secret=stored_oauth_token_secret,
+        verifier=oauth_verifier
+    )
+    try:
+        # Obtain access token
+        access_token = oauth.fetch_access_token("https://api.twitter.com/oauth/access_token")
+        request.session['twitter_access_token'] = access_token
+        return JsonResponse({"message": "Authentication successful!"}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": f"Error during Twitter callback: {str(e)}"}, status=500)
+
+
+# Step 3: Post a Tweet
+def post_tweet(request):
+    if request.method == "POST":
+        access_token = request.session.get('twitter_access_token')
+        if not access_token:
+            return JsonResponse({"error": "User not authenticated with Twitter"}, status=403)
+
+        title = request.POST.get('title')
+        artist = request.POST.get('artist')
+        medium = request.POST.get('medium')
+        image_url = request.POST.get('image_url')
+
+        tweet_text = f"Check out this artwork:\n\nTitle: {title}\nArtist: {artist}\nMedium: {medium}"
+
+        oauth = OAuth1Session(
+            settings.TWITTER_API_KEY,
+            client_secret=settings.TWITTER_API_SECRET_KEY,
+            resource_owner_key=access_token['oauth_token'],
+            resource_owner_secret=access_token['oauth_token_secret']
+        )
+
+        try:
+            # Post the tweet
+            media_response = oauth.post(
+                "https://upload.twitter.com/1.1/media/upload.json",
+                files={"media": requests.get(image_url).content}
+            )
+            media_response.raise_for_status()
+
+            media_id = media_response.json()["media_id"]
+            tweet_response = oauth.post(
+                "https://api.twitter.com/1.1/statuses/update.json",
+                data={"status": tweet_text, "media_ids": media_id}
+            )
+            tweet_response.raise_for_status()
+
+            return JsonResponse({"message": "Tweet posted successfully!"}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": f"Error posting tweet: {str(e)}"}, status=500)

@@ -196,15 +196,18 @@ function Home() {
         <div className="home-container">
             <div className="top-right-links">
                 {loggedIn ? (
-                    <>
+                    <div className="dropdown">
                         <span className="username-display">Hello, {username}!</span>
-                        <button onClick={logout} className="logout-button">Logout</button>
-                    </>
+                        <div className="dropdown-content">
+                            <Link to="/favorites" className="dropdown-link">Favorites</Link>
+                            <button onClick={logout} className="dropdown-link">Logout</button>
+                        </div>
+                    </div>
                 ) : (
-                    <>
+                    <div className="auth-links">
                         <Link to="/login" className="top-right-link">Login</Link>
                         <Link to="/register" className="top-right-link">Register</Link>
-                    </>
+                    </div>
                 )}
             </div>
 
