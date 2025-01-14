@@ -13,7 +13,7 @@ function Favorites() {
     useEffect(() => {
         const fetchFavorites = async () => {
             try {
-                const url = `http://localhost:8014/api/likes/user/`;
+                const url = `http://localhost:8000/api/likes/user/`;
                 const response = await axios.get(url, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -44,7 +44,7 @@ function Favorites() {
     const handleTwitterAuth = async () => {
         try {
             // Redirect to the Twitter login endpoint
-            const response = await axios.get('http://localhost:8014/api/twitter/login/');
+            const response = await axios.get('http://localhost:8000/api/twitter/login/');
             window.open(response.data.authorization_url, '_blank', 'width=600,height=400');
         } catch (error) {
             console.error('Error during Twitter login:', error);
@@ -61,7 +61,7 @@ function Favorites() {
         }
 
         try {
-            const response = await axios.post('http://localhost:8014/api/twitter/post/', {
+            const response = await axios.post('http://localhost:8000/api/twitter/post/', {
                 title: artwork.title,
                 artist: artwork.artist,
                 medium: artwork.medium,

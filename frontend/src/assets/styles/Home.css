@@ -384,16 +384,7 @@ h1 {
     margin-bottom: 10px;
 }
 
-.download-button,
-.close-button {
-    margin-top: 10px;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+
 
 .download-button:hover,
 .close-button:hover {
@@ -543,25 +534,7 @@ h1 {
     text-align: left;
 }
 
-.artwork-details .like-button {
-    margin-top: 10px;
-    padding: 10px;
-    background-color: red;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 32%;
-    /* Fixed width to ensure it does not grow */
-    position: absolute;
-    right: 1%;
-    /* Positioning the button */
-    top: 62%;
-    transition: background-color 0.3s ease;
-    /* Only background-color change on hover */
-    transform: none;
-    /* Prevent scaling or transformation */
-}
+
 
 .artwork-details .like-button:hover {
     background-color: darkred;
@@ -576,6 +549,8 @@ h1 {
     transform: none;
     /* Prevent any scaling on hover */
 }
+
+
 
 /* Dropdown Styling */
 .dropdown {
@@ -656,4 +631,33 @@ h1 {
     margin-top: 20px;
     display: flex;
     gap: 10px;
+}
+
+.artwork-details .like-button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* Only background-color change on hover */
+    transform: none;
+    /* Prevent scaling or transformation */
+}
+
+.close-button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: red;
+    transition: background-color 0.3s ease;
+}
+
+.close-button:hover {
+    background-color: #c82333;
+}
+
+.download-button:hover {
+    background-color: #0056b3;
 }

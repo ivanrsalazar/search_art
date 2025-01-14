@@ -76,7 +76,7 @@ class ArticAPI(BaseAPI):
 
             # Create the Django Artwork model instance
             artwork_model = Artwork(
-                api_source='Artic',
+                api_source='Art Institute of Chicago',
                 title=artwork_title,
                 artist=artist_name,
                 date=date,

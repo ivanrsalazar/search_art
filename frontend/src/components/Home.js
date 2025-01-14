@@ -13,13 +13,15 @@ function Home() {
     const location = useLocation();
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
-    const previousSearch = searchParams.get('q') || '';
+    const initialSearch = searchParams.get('q') || '';
 
-    const [searchTerm, setSearchTerm] = useState(previousSearch);
+    // Introduce a separate state for the input value
+    const [inputValue, setInputValue] = useState(initialSearch);
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
     const [artworks, setArtworks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
-    const [showSearch, setShowSearch] = useState(true);
+    const [showSearch, setShowSearch] = useState(initialSearch.trim() === '');
     const [pageOffset, setPageOffset] = useState(1);
     const [allLoaded, setAllLoaded] = useState(false);
     const [selectedArtwork, setSelectedArtwork] = useState(null);
@@ -28,14 +30,13 @@ function Home() {
     const isFetching = useRef(false);
 
     // State for Liked Artworks
-    // Modified: Initialize as empty array instead of using localStorage
     const [likedArtworks, setLikedArtworks] = useState([]);
 
     const toggleLike = (imageUrl) => {
         console.log('Before Toggle:', likedArtworks); // Log current state
 
         if (likedArtworks.includes(imageUrl)) {
-            const url = `http://localhost:8014/api/likes/${encodeURIComponent(imageUrl)}/`;
+            const url = `http://localhost:8000/api/likes/${encodeURIComponent(imageUrl)}/`;
             axios.delete(url, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -52,7 +53,7 @@ function Home() {
                     console.error('Error unliking artwork:', err);
                 });
         } else {
-            const url = `http://localhost:8014/api/likes/`;
+            const url = `http://localhost:8000/api/likes/`;
             console.log('Sending Authorization:', localStorage.getItem('accessToken'));
             axios.post(url, { image_url: imageUrl }, {
                 headers: {
@@ -73,14 +74,14 @@ function Home() {
     };
 
     const fetchArtworks = useCallback(async (offset) => {
-        if (isFetching.current || !previousSearch.trim()) return;
+        if (isFetching.current || !searchTerm.trim()) return;
 
         isFetching.current = true;
         setLoading(true);
         setError(false);
 
         try {
-            const url = `http://localhost:8014/api/search/?q=${encodeURIComponent(previousSearch)}&page=${offset}`;
+            const url = `http://localhost:8000/api/search/?q=${encodeURIComponent(searchTerm)}&page=${offset}`;
             const response = await axios.get(url);
 
             if (response.data && Array.isArray(response.data.images)) {
@@ -106,40 +107,30 @@ function Home() {
             isFetching.current = false;
             setShowSearch(false);
         }
-    }, [previousSearch]);
+    }, [searchTerm]);
 
     useEffect(() => {
-        if (!previousSearch.trim()) {
+        if (!searchTerm.trim()) {
             setArtworks([]);
             setLoading(false);
+            setShowSearch(true); // Show the search bar
+            setPageOffset(1);
+            setAllLoaded(false);
             return;
         }
 
-        const previousStoredSearch = sessionStorage.getItem('previousSearch');
-        if (previousStoredSearch !== previousSearch) {
-            sessionStorage.removeItem('searchResults');
-            sessionStorage.setItem('previousSearch', previousSearch);
-            setArtworks([]);
-            setPageOffset(1);
-            setAllLoaded(false);
-            fetchArtworks(1);
-        } else {
-            const storedArtworks = sessionStorage.getItem('searchResults');
-            if (storedArtworks) {
-                setArtworks(JSON.parse(storedArtworks));
-                setShowSearch(false);
-                setLoading(false);
-            } else {
-                fetchArtworks(1);
-            }
-        }
-    }, [previousSearch, fetchArtworks]);
+        // Reset artworks and pagination when searchTerm changes
+        setArtworks([]);
+        setPageOffset(1);
+        setAllLoaded(false);
+        fetchArtworks(1);
+    }, [searchTerm, fetchArtworks]);
 
     // New useEffect to fetch liked artworks when logged in
     useEffect(() => {
         const fetchLikedArtworks = async () => {
             try {
-                const url = `http://localhost:8014/api/likes/user/`;
+                const url = `http://localhost:8000/api/likes/user/`;
                 const response = await axios.get(url, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -180,16 +171,29 @@ function Home() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const trimmedSearchTerm = searchTerm.trim();
+        const trimmedSearchTerm = inputValue.trim();
         if (!trimmedSearchTerm) {
             alert('Please enter a search term.');
             return;
         }
 
-        sessionStorage.removeItem('searchResults');
-        sessionStorage.setItem('previousSearch', trimmedSearchTerm);
+        // Update the searchTerm state to trigger useEffect
+        setSearchTerm(trimmedSearchTerm);
 
+        // Update the URL query parameter
         navigate(`/?q=${encodeURIComponent(trimmedSearchTerm)}`);
+    };
+
+    // **Handler to reset the state when "Back to Search" is clicked**
+    const handleBackToSearch = () => {
+        navigate('/');
+        setInputValue('');      // Clear the input field
+        setSearchTerm('');     // Clear the search term to trigger useEffect
+        setArtworks([]);       // Clear artworks
+        setPageOffset(1);      // Reset pagination
+        setAllLoaded(false);   // Reset allLoaded flag
+        setShowSearch(true);   // Show the search bar
+        artworkUrls.current = new Set(); // **Reset the artwork URLs**
     };
 
     return (
@@ -216,21 +220,21 @@ function Home() {
                 <form onSubmit={handleSubmit} className="search-form">
                     <input
                         type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
                         placeholder="Search for artworks..."
                         className="search-input"
                     />
                     <button type="submit" className="search-button">Search</button>
                 </form>
             ) : (
-                <button onClick={() => navigate('/')} className="back-to-search">Back to Search</button>
+                <button onClick={handleBackToSearch} className="back-to-search">Back to Search</button>
             )}
 
             {loading && <div className="spinner"></div>}
             {error && <div className="error">Error loading artworks.</div>}
-            {!showSearch && previousSearch && artworks.length === 0 && !loading && !error && (
-                <p>No artworks found for "{previousSearch}". Please try a different search term.</p>
+            {!showSearch && searchTerm && artworks.length === 0 && !loading && !error && (
+                <p>No artworks found for "{searchTerm}". Please try a different search term.</p>
             )}
 
             {artworks.length > 0 && (
@@ -277,27 +281,21 @@ function Home() {
                             <div className="detail-item"><strong>Date:</strong> <br />{selectedArtwork.date}</div>
                             <div className="detail-item"><strong>Dimensions:</strong> <br />{selectedArtwork.dimensions}</div>
                             <div className="detail-item"><strong>Medium:</strong> <br />{selectedArtwork.medium}</div>
+                            <div className="detail-item"><strong>Source:</strong> <br />{selectedArtwork.api_source}</div>
 
-                            {/* Like Button in Modal */}
-                            <LikeButton
-                                isLiked={likedArtworks.includes(selectedArtwork.image_url)}
-                                onToggle={() => toggleLike(selectedArtwork.image_url)}
-                            />
+                            <div className='modal-buttons'>
+                                {/* Like Button in Modal */}
+                                <LikeButton
+                                    isLiked={likedArtworks.includes(selectedArtwork.image_url)}
+                                    onToggle={() => toggleLike(selectedArtwork.image_url)}
+                                />
 
-                            <button onClick={() => {
-                                const link = document.createElement('a');
-                                link.href = selectedArtwork.image_url;
-                                link.download = `${selectedArtwork.title || 'artwork'}.jpg`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                            }} className="download-button">
-                                Download Image
-                            </button>
 
-                            <button onClick={closeArtworkDetailModal} className="close-button">
-                                Close
-                            </button>
+
+                                <button onClick={closeArtworkDetailModal} className="close-button">
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
