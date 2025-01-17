@@ -1,15 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LikeButton from './LikeButton';
 import '../assets/styles/Home.css';
+import { AuthContext } from '../AuthContext';  // Import for authentication
 
 function Favorites() {
     const [favorites, setFavorites] = useState([]);
     const [error, setError] = useState(null);
-    const [selectedArtwork, setSelectedArtwork] = useState(null); // For modal
-    const [isTwitterAuthenticated, setIsTwitterAuthenticated] = useState(false); // Twitter auth state
+    const [selectedArtwork, setSelectedArtwork] = useState(null);  // For modal
+    const [likedArtworks, setLikedArtworks] = useState([]);  // Track likes
+    const [isTwitterAuthenticated, setIsTwitterAuthenticated] = useState(false);  // Twitter auth state
 
+    const { loggedIn } = useContext(AuthContext);
+    const navigate = useNavigate();
+
+    // Fetch user's liked artworks
     useEffect(() => {
         const fetchFavorites = async () => {
             try {
@@ -23,6 +29,7 @@ function Favorites() {
                 if (response.data && Array.isArray(response.data)) {
                     const artworks = response.data.map(like => like.artwork);
                     setFavorites(artworks);
+                    setLikedArtworks(artworks.map(artwork => artwork.image_url));
                 }
             } catch (err) {
                 setError('Error fetching favorites.');
@@ -30,20 +37,42 @@ function Favorites() {
             }
         };
 
-        fetchFavorites();
-    }, []);
+        if (loggedIn) {
+            fetchFavorites();
+        }
+    }, [loggedIn]);
 
+    // Open modal
     const openArtworkDetailModal = (artwork) => {
         setSelectedArtwork(artwork);
     };
 
+    // Close modal
     const closeArtworkDetailModal = () => {
         setSelectedArtwork(null);
     };
 
+    // Like/Unlike functionality
+    const toggleLike = (imageUrl) => {
+        if (likedArtworks.includes(imageUrl)) {
+            axios.delete(`http://localhost:8000/api/likes/${encodeURIComponent(imageUrl)}/`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+            }).then(() => {
+                setLikedArtworks(prev => prev.filter(url => url !== imageUrl));
+                setFavorites(prev => prev.filter(art => art.image_url !== imageUrl));  // Remove from favorites
+            }).catch(err => console.error('Error unliking artwork:', err));
+        } else {
+            axios.post(`http://localhost:8000/api/likes/`, { image_url: imageUrl }, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+            }).then(() => {
+                setLikedArtworks(prev => [...prev, imageUrl]);
+            }).catch(err => console.error('Error liking artwork:', err));
+        }
+    };
+
+    // Twitter authentication
     const handleTwitterAuth = async () => {
         try {
-            // Redirect to the Twitter login endpoint
             const response = await axios.get('http://localhost:8000/api/twitter/login/');
             window.open(response.data.authorization_url, '_blank', 'width=600,height=400');
         } catch (error) {
@@ -52,8 +81,8 @@ function Favorites() {
         }
     };
 
+    // Share artwork on Twitter
     const shareOnTwitter = async (artwork) => {
-        // Check if the user is authenticated with Twitter
         if (!isTwitterAuthenticated) {
             alert('You need to authenticate with Twitter to share.');
             await handleTwitterAuth();
@@ -83,7 +112,7 @@ function Favorites() {
 
     return (
         <div className="home-container">
-            {/* Top-right links */}
+            {/* Top-right navigation */}
             <div className="top-right-links">
                 <Link to="/" className="top-right-link">Home</Link>
             </div>
@@ -131,7 +160,12 @@ function Favorites() {
                             <div className="detail-item"><strong>Date:</strong> {selectedArtwork.date}</div>
                             <div className="detail-item"><strong>Dimensions:</strong> {selectedArtwork.dimensions}</div>
                             <div className="detail-item"><strong>Medium:</strong> {selectedArtwork.medium}</div>
+
                             <div className="modal-buttons">
+                                <LikeButton
+                                    isLiked={likedArtworks.includes(selectedArtwork.image_url)}
+                                    onToggle={() => toggleLike(selectedArtwork.image_url)}
+                                />
                                 <button
                                     onClick={() => shareOnTwitter(selectedArtwork)}
                                     className="share-button"

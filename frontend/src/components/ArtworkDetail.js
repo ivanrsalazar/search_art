@@ -1,77 +1,101 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import '../assets/styles/ArtworkDetail.css';
+import React, { useEffect, useState, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import '../assets/styles/Home.css';  // Reuse Home.css for styling
+import LikeButton from './LikeButton';  // Ensure LikeButton is correctly imported
+import { AuthContext } from '../AuthContext';  // For user authentication
 
 function ArtworkDetail() {
+    const { image_hash } = useParams();
     const navigate = useNavigate();
-    const { image_hash } = useParams();  // Extract image_hash from URL
-    const location = useLocation();
+    const { loggedIn } = useContext(AuthContext);
 
-    const [artwork, setArtwork] = useState(location.state?.artwork || null);
-    const [loading, setLoading] = useState(!artwork);
-    const [error, setError] = useState(null);
+    const [artwork, setArtwork] = useState(null);
+    const [likedArtworks, setLikedArtworks] = useState([]);  // ✅ Defined here
 
+    // ✅ Fetch artwork details
     useEffect(() => {
-        // Fetch artwork data only if it isn't passed via location.state
-        if (!artwork) {
-            const fetchArtwork = async () => {
+        const fetchArtwork = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8000/api/artwork/${image_hash}/`);
+                setArtwork(response.data);
+            } catch (error) {
+                console.error("Error fetching artwork:", error);
+            }
+        };
+        fetchArtwork();
+    }, [image_hash]);
+
+    // ✅ Fetch liked artworks
+    useEffect(() => {
+        const fetchLikedArtworks = async () => {
+            if (loggedIn) {
                 try {
-                    const response = await fetch(`http://localhost:8000/api/artwork/${image_hash}/`);
-                    console.log(image_hash);
-                    if (!response.ok) {
-                        throw new Error('Artwork not found');
-                    }
-                    const data = await response.json();
-                    setArtwork(data);
+                    const response = await axios.get(`http://localhost:8000/api/likes/user/`, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        }
+                    });
+                    const likedUrls = response.data.map(like => like.artwork.image_url);
+                    setLikedArtworks(likedUrls);
                 } catch (err) {
-                    console.error("Error fetching artwork:", err);
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
+                    console.error('Error fetching liked artworks:', err);
                 }
-            };
+            }
+        };
 
-            fetchArtwork();
-        }
-    }, [artwork, image_hash]);
+        fetchLikedArtworks();
+    }, [loggedIn]);
 
-    const handleDownload = () => {
-        if (artwork?.image_url) {
-            const link = document.createElement('a');
-            link.href = artwork.image_url;
-            link.download = `${artwork.title || 'artwork'}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+    // ✅ Like/Unlike functionality
+    const toggleLike = (imageUrl) => {
+        if (likedArtworks.includes(imageUrl)) {
+            axios.delete(`http://localhost:8000/api/likes/${encodeURIComponent(imageUrl)}/`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+            }).then(() => {
+                setLikedArtworks(prev => prev.filter(url => url !== imageUrl));
+            }).catch(err => console.error('Error unliking artwork:', err));
+        } else {
+            axios.post(`http://localhost:8000/api/likes/`, { image_url: imageUrl }, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+            }).then(() => {
+                setLikedArtworks(prev => [...prev, imageUrl]);
+            }).catch(err => console.error('Error liking artwork:', err));
         }
     };
 
-    const handleBackToResults = () => {
-        navigate('/');
+    const handleBack = () => {
+        navigate(-1);  // Go back to the previous page
     };
 
-    if (loading) return <div>Loading artwork details...</div>;
-    if (error) return <div className="error">Error: {error}</div>;
+    if (!artwork) return <div>Loading...</div>;
 
     return (
-        <div className="artwork-detail-container">
-            <div className="artwork-image">
-                <img src={artwork.image_url} alt={artwork.title} className="artwork-image" />
-            </div>
-            <div className="artwork-details">
-                <h2>{artwork.title}</h2>
-                <div className="detail-item"><strong>Artist:</strong> <br />{artwork.artist}</div>
-                <div className="detail-item"><strong>Date:</strong> <br />{artwork.date}</div>
-                <div className="detail-item"><strong>Dimensions:</strong> <br />{artwork.dimensions}</div>
-                <div className="detail-item"><strong>Medium:</strong> <br />{artwork.medium}</div>
+        <div className="artwork-modal">  {/* Reusing modal styling */}
+            <div className="artwork-modal-content">
+                <div className="artwork-image">
+                    <img src={artwork.image_url} alt={artwork.title} className="artwork-image" />
+                </div>
+                <div className="artwork-details">
+                    <h2>{artwork.title}</h2>
+                    <div className="detail-item"><strong>Artist:</strong> <br />{artwork.artist}</div>
+                    <div className="detail-item"><strong>Date:</strong> <br />{artwork.date}</div>
+                    <div className="detail-item"><strong>Dimensions:</strong> <br />{artwork.dimensions}</div>
+                    <div className="detail-item"><strong>Medium:</strong> <br />{artwork.medium}</div>
+                    <div className="detail-item"><strong>Source:</strong> <br />{artwork.source}</div>
 
-                <button onClick={handleDownload} className="download-button">
-                    Download Image
-                </button>
+                    <div className='modal-buttons'>
+                        {/* ✅ LikeButton now works */}
+                        <LikeButton
+                            isLiked={likedArtworks.includes(artwork.image_url)}
+                            onToggle={() => toggleLike(artwork.image_url)}
+                        />
 
-                <button onClick={handleBackToResults} className="back-button">
-                    Back to Results
-                </button>
+                        <button onClick={handleBack} className="close-button">
+                            Back
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

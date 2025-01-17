@@ -75,7 +75,7 @@ ROOT_URLCONF = 'art_project.urls'
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # React development server
+    'http://localhost:3002',  # React development server
 ]
 
 # Templates Configuration

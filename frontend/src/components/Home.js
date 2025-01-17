@@ -7,6 +7,7 @@ import { AuthContext } from '../AuthContext'; // Import AuthContext
 
 // Import LikeButton component
 import LikeButton from './LikeButton';
+import ArtworkImage from './ArtworkImage';
 
 function Home() {
     const { loggedIn, username, logout } = useContext(AuthContext); // Consume AuthContext
@@ -31,6 +32,12 @@ function Home() {
 
     // State for Liked Artworks
     const [likedArtworks, setLikedArtworks] = useState([]);
+
+    const removeInvalidArtwork = (invalidUrl) => {
+        setArtworks((prevArtworks) =>
+            prevArtworks.filter((artwork) => artwork.image_url !== invalidUrl)
+        );
+    };
 
     const toggleLike = (imageUrl) => {
         console.log('Before Toggle:', likedArtworks); // Log current state
@@ -140,7 +147,6 @@ function Home() {
                 if (response.data && Array.isArray(response.data)) {
                     // Extract image URLs from the liked artworks
                     const likedUrls = response.data.map(like => like.artwork.image_url);
-                    console.log(likedUrls);
                     setLikedArtworks(likedUrls);
                 }
             } catch (err) {
@@ -242,12 +248,9 @@ function Home() {
                     {artworks.map((artwork, index) => (
                         <div key={`${artwork.image_url}-${index}`} className="artwork-container">
                             <div className="artwork-item" onClick={() => openArtworkDetailModal(artwork)}>
-                                <img
-                                    src={artwork.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}
-                                    alt={artwork.title}
-                                    className="artwork-image"
-                                    loading="lazy"
-                                    aria-label={`View details for ${artwork.title}`}
+                                <ArtworkImage
+                                    artwork={artwork}
+                                    onInvalidImage={removeInvalidArtwork}
                                 />
                                 <div className="artwork-title-overlay">
                                     <h3 className="artwork-title">{artwork.title}</h3>
@@ -273,7 +276,7 @@ function Home() {
                 <div className="artwork-modal" onClick={closeArtworkDetailModal}>
                     <div className="artwork-modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="artwork-image">
-                            <img src={selectedArtwork.image_url} alt={selectedArtwork.title} className="artwork-image" />
+                            <ArtworkImage artwork={selectedArtwork} />
                         </div>
                         <div className="artwork-details">
                             <h2>{selectedArtwork.title}</h2>
