@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 
-const checkImageUrl = async (url, fallbackUrls) => {
-    try {
-        const response = await fetch(url, { method: 'HEAD' });
-        if (response.ok) {
-            return url;
-        } else if (fallbackUrls.length > 0) {
-            return await checkImageUrl(fallbackUrls[0], fallbackUrls.slice(1));
-        } else {
-            throw new Error('No valid image URL found');
-        }
-    } catch (error) {
-        console.error(`Error loading image: ${url}`, error);
-        return null;  // Return null if all attempts fail
+const checkImageUrlByLoading = (url) => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+};
+
+const checkImageChain = async (urls) => {
+    // Try each URL in order until one works
+    for (let url of urls) {
+        const valid = await checkImageUrlByLoading(url);
+        if (valid) return valid;
     }
+    return null;
 };
 
 function ArtworkImage({ artwork, onInvalidImage }) {
@@ -27,12 +29,23 @@ function ArtworkImage({ artwork, onInvalidImage }) {
             const fallbackUrls = fallbackSizes.map(size =>
                 image_url.replace(/full\/.*?\/0/, `full/${size},/0`)
             );
-
-            checkImageUrl(fallbackUrls[0], fallbackUrls.slice(1)).then(url => {
+            checkImageChain(fallbackUrls).then(url => {
                 if (url) {
                     setValidUrl(url);
                 } else {
-                    onInvalidImage(artwork.image_url);  // Notify parent to remove invalid image
+                    onInvalidImage(artwork.image_url);
+                }
+            });
+        } else if (api_source === 'Artsy') {
+            const artsyfallbackSizes = ['normalized', 'larger', 'large', 'medium', 'square'];
+            const artsyfallbackUrls = artsyfallbackSizes.map(size =>
+                image_url.replace(/[^/]+$/, `${size}.jpg`)
+            );
+            checkImageChain(artsyfallbackUrls).then(url => {
+                if (url) {
+                    setValidUrl(url);
+                } else {
+                    onInvalidImage(artwork.image_url);
                 }
             });
         } else {
@@ -40,7 +53,7 @@ function ArtworkImage({ artwork, onInvalidImage }) {
         }
     }, [artwork, onInvalidImage]);
 
-    if (!validUrl) return null;  // Don't render anything if URL is invalid
+    if (!validUrl) return null;
 
     return (
         <img
