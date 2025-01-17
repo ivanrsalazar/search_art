@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import hashlib
 
 class Artwork(models.Model):
     image_url = models.CharField(max_length=200, primary_key=True)
@@ -10,7 +11,9 @@ class Artwork(models.Model):
     medium = models.CharField(max_length=255)
     dimensions = models.CharField(max_length=255)
     image = models.CharField(max_length=100, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
+    image_hash = models.CharField(max_length=64, blank=True, null=True)
+    description = models.TextField(null=True, blank=True)   
+    
     all_required = models.BooleanField()
 
     def is_complete(self):

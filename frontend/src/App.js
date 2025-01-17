@@ -14,7 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-        <Route path="/artwork/:id/" element={<ArtworkDetail />} />
+        <Route path="/artwork/:image_hash" element={<ArtworkDetail />} />
         <Route path="/register/" element={<Register />} />
         <Route path="/login/" element={<Login />} /> {/* Add the Login route */}
       </Routes>

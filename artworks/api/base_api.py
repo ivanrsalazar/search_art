@@ -2,6 +2,9 @@
 import httpx
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, List
+from ..models import Artwork
+from asgiref.sync import sync_to_async
+
 
 class BaseAPI(ABC):
     def __init__(self, base_url: str, api_key: Optional[str] = None):
@@ -55,3 +58,10 @@ class BaseAPI(ABC):
 
     async def close(self):
         await self.client.aclose()
+
+    @sync_to_async
+    def get_artwork_by_hash(self, image_hash: str) -> Artwork:
+        """
+        Fetches an artwork from the database using its image_hash.
+        """
+        return Artwork.objects.filter(image_hash=image_hash).first()

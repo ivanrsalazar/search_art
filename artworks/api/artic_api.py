@@ -6,6 +6,8 @@ import asyncio
 from django.db import IntegrityError
 from .serializers import ArtworkSerializer
 from asgiref.sync import sync_to_async  # Import sync_to_async
+import hashlib
+import base64
 
 class ArticAPI(BaseAPI):
     """
@@ -62,6 +64,8 @@ class ArticAPI(BaseAPI):
             artist_name = work_details.get('artist_display')
             image_id = work_details.get('image_id')
             image_url = f'https://www.artic.edu/iiif/2/{image_id}/full/1686,/0/default.jpg'
+            hash_bytes = hashlib.sha256(image_url.encode()).digest()
+            image_hash = base64.urlsafe_b64encode(hash_bytes).decode('utf-8')[:6]
             artwork_title = work_details.get('title')
             date = work_details.get('date_display')
             medium = work_details.get('medium_display')
@@ -83,6 +87,7 @@ class ArticAPI(BaseAPI):
                 medium=medium,
                 dimensions=dimensions,
                 image_url=image_url,
+                image_hash=image_hash,
                 all_required=True  # Assuming the data is complete; adjust this logic if needed
             )
             # Save the Artwork model instance using sync_to_async
@@ -105,4 +110,17 @@ class ArticAPI(BaseAPI):
         
         return artwork_model  # Return the saved Artwork model instance
 
+
+    async def get_artwork_by_hash(self, image_hash: str) -> Optional[Artwork]:
+        """
+        Retrieves an artwork from the Art Institute of Chicago database by its image_hash.
+        """
+        artwork = await super().get_artwork_by_hash(image_hash)
+        print(artwork.image_url)
+        if artwork:
+            print(f"Found artwork in DB with hash: {image_hash}")
+            return artwork
+        else:
+            print(f"No artwork found in DB with hash: {image_hash}")
+            return None
     

@@ -24,6 +24,7 @@ from .api.artic_api import ArticAPI
 from .api.artsy_api import ArtsyAPI
 from .models import Artwork, Like
 from requests_oauthlib import OAuth1Session
+import hashlib
 
 
 
@@ -104,41 +105,33 @@ def home_view(request):
     return render(request, 'artworks/home.html')
 '''
 
-@api_view(['GET'])
-async def artwork_detail_view(request, artwork_id):
-    source = request.GET.get('source', 'aic')  # Default to AIC
-    if source == 'aic':
-        # Use your ArticAPI to fetch details
-        artic_api = ArticAPI()
-        try:
-            artwork = await artic_api.get('/')
-        except Exception as e:
-            return Response({'error': f'Error fetching artwork: {str(e)}'}, status=500)
-    elif source == 'harvard':
-        # Implement similar logic for Harvard API
-        # Assuming you have a HarvardAPI class similar to ArticAPI
-        harvard_api = HarvardAPI(api_key=settings.HARVARD_API_KEY)
-        try:
-            artwork = await harvard_api.get_single_artwork(int(artwork_id))
-        except Exception as e:
-            return Response({'error': f'Error fetching artwork: {str(e)}'}, status=500)
-    else:
-        return Response({'error': 'Invalid source'}, status=400)
+def generate_image_hash(image_url):
+    return hashlib.sha256(image_url.encode()).hexdigest()
 
-    if not artwork:
+@api_view(['GET'])  # This is crucial for proper rendering
+def artwork_detail_view(request, image_hash):
+    print(image_hash)
+    try:
+        # Directly query the database using image_hash from the URL
+        artwork = Artwork.objects.get(image_hash=image_hash)
+    except Artwork.DoesNotExist:
         return Response({'error': 'Artwork not found'}, status=404)
 
-    context = {
-        'id': artwork.id,
+    print(image_hash)
+    print(artwork.image_url)
+    # Prepare and return the artwork data
+    data = {
         'title': artwork.title,
         'artist': artwork.artist,
         'date': artwork.date,
-        'dimensions': artwork.dimensions,
         'medium': artwork.medium,
+        'dimensions': artwork.dimensions,
         'image_url': artwork.image_url,
+        'image_hash': image_hash,
         'source': artwork.api_source,
     }
-    return Response(context)
+
+    return Response(data)
 
 async def get_image_view(request):
     image_id = request.GET.get('image_id')

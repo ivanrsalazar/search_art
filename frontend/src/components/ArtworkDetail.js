@@ -1,14 +1,39 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import '../assets/styles/ArtworkDetail.css';
 
 function ArtworkDetail() {
     const navigate = useNavigate();
+    const { image_hash } = useParams();  // Extract image_hash from URL
     const location = useLocation();
 
-    // Access artwork data from React Router's state
-    const artwork = location.state?.artwork;
-    console.log("Artwork data:", artwork);
+    const [artwork, setArtwork] = useState(location.state?.artwork || null);
+    const [loading, setLoading] = useState(!artwork);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // Fetch artwork data only if it isn't passed via location.state
+        if (!artwork) {
+            const fetchArtwork = async () => {
+                try {
+                    const response = await fetch(`http://localhost:8000/api/artwork/${image_hash}/`);
+                    console.log(image_hash);
+                    if (!response.ok) {
+                        throw new Error('Artwork not found');
+                    }
+                    const data = await response.json();
+                    setArtwork(data);
+                } catch (err) {
+                    console.error("Error fetching artwork:", err);
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            fetchArtwork();
+        }
+    }, [artwork, image_hash]);
 
     const handleDownload = () => {
         if (artwork?.image_url) {
@@ -21,12 +46,12 @@ function ArtworkDetail() {
         }
     };
 
-    // If artwork data is missing, show an error message
-    if (!artwork) return <div className="error">Artwork details are missing.</div>;
-
     const handleBackToResults = () => {
         navigate('/');
     };
+
+    if (loading) return <div>Loading artwork details...</div>;
+    if (error) return <div className="error">Error: {error}</div>;
 
     return (
         <div className="artwork-detail-container">

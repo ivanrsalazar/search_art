@@ -4,7 +4,7 @@ from ..models import Artwork, Like
 class ArtworkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artwork
-        fields = ['title', 'artist', 'date', 'medium', 'dimensions', 'image_url', 'description', 'all_required','api_source']
+        fields = ['title', 'artist', 'date', 'medium', 'dimensions', 'image_url', 'description', 'all_required', 'image_hash', 'api_source']
 
 class LikeSerializer(serializers.ModelSerializer):
     artwork = ArtworkSerializer()

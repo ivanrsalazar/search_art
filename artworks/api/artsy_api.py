@@ -9,6 +9,8 @@ from django.db import IntegrityError, transaction
 from .serializers import ArtworkSerializer
 from asgiref.sync import sync_to_async
 import logging
+import hashlib
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +110,8 @@ class ArtsyAPI(BaseAPI):
             # Normalize the thumbnail URL to derive the image URL
             thumbnail_url = obj['_links']['thumbnail']['href']
             image_url = thumbnail_url.replace("square.jpg", "normalized.jpg")
+            hash_bytes = hashlib.sha256(image_url.encode()).digest()
+            image_hash = base64.urlsafe_b64encode(hash_bytes).decode('utf-8')[:6]
 
             # Parse title and artist details
             title_parts = obj['title'].split(',')
@@ -135,6 +139,7 @@ class ArtsyAPI(BaseAPI):
                             'medium': medium,
                             'dimensions': dimensions,
                             'description': description,
+                            'image_hash': image_hash,
                             'all_required': True
                         }
                     )
@@ -170,3 +175,14 @@ class ArtsyAPI(BaseAPI):
                 logger.error(f"Error fetching image from {image_url}: {e}")
                 return None
         return None
+
+    async def get_artwork_by_hash(self, image_hash: str) -> Optional[Artwork]:
+        """
+        Public method to retrieve an artwork by its image_hash.
+        """
+        artwork = await self.get_existing_artwork_by_hash(image_hash)
+        if artwork:
+            return artwork
+        else:
+            logger.warning(f"Artwork with hash {image_hash} not found.")
+            return None

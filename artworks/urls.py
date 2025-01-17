@@ -15,7 +15,7 @@ import os
 
 urlpatterns = [
     path('api/search/', artwork_search_view, name='artwork_search'),
-    path('api/artwork/<int:artwork_id>/', artwork_detail_view, name='artwork_detail'),
+    path('api/artwork/<str:image_hash>/', artwork_detail_view, name='artwork_detail'),
     path('api/get-image/', get_image_view, name='get_image'),
     path('api/register/', register, name='register'),
     path('api/login/', login, name='login'),

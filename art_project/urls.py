@@ -8,4 +8,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('artworks.urls')),  # Include URLs from the artworks app
     
+    
 ]
