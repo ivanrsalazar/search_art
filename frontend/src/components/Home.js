@@ -1,4 +1,3 @@
-// src/components/Home.js
 import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';  // Using axiosInstance for API calls
@@ -131,6 +130,18 @@ function Home() {
         }
     }, [loggedIn]);
 
+    useEffect(() => {
+        if (!searchTerm.trim() && artworks.length === 0) {
+            document.body.style.overflow = 'hidden'; // Disable scrolling
+        } else {
+            document.body.style.overflow = 'auto'; // Enable scrolling
+        }
+
+        return () => {
+            document.body.style.overflow = 'auto'; // Ensure scrolling is enabled on cleanup
+        };
+    }, [searchTerm, artworks.length]);
+
     const handleLoadMore = () => {
         const newPageOffset = pageOffset + 1;
         setPageOffset(newPageOffset);
@@ -165,7 +176,7 @@ function Home() {
     };
 
     return (
-        <div className="home-container">
+        <div className={`home-container ${showSearch ? "initial-home" : ""}`}>
             <div className="top-right-links">
                 {loggedIn ? (
                     <div className="dropdown">
@@ -217,7 +228,7 @@ function Home() {
                 </div>
             )}
 
-            {!allLoaded && !loading && (
+            {!allLoaded && !loading && searchTerm.trim() && (
                 <button onClick={handleLoadMore} className="load-more-button">Load More</button>
             )}
 
@@ -234,11 +245,15 @@ function Home() {
                             <div className="detail-item"><strong>Date:</strong> {selectedArtwork.date}</div>
                             <div className="detail-item"><strong>Dimensions:</strong> {selectedArtwork.dimensions}</div>
                             <div className="detail-item"><strong>Medium:</strong> {selectedArtwork.medium}</div>
+                            <div className="detail-item"><strong>Source:</strong> {selectedArtwork.api_source}</div>
                             <div className="modal-buttons">
                                 <LikeButton
                                     isLiked={likedArtworks.includes(selectedArtwork.image_url)}
                                     onToggle={() => toggleLike(selectedArtwork.image_url)}
                                 />
+                                <button className="close-button">
+                                    Share on X
+                                </button>
                                 <button onClick={closeArtworkDetailModal} className="close-button">
                                     Close
                                 </button>

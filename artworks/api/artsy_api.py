@@ -117,13 +117,17 @@ class ArtsyAPI(BaseAPI):
             title_parts = obj['title'].split(',')
             artist_name = title_parts[0].strip() if len(title_parts) > 0 else ''
             artwork_title = ','.join(title_parts[1:]).strip() if len(title_parts) > 1 else obj['title']
-
+            if ('(' in artwork_title):
+                artwork_title, title_date = artwork_title.split('(')[0], artwork_title.split('(')[1][:-1]
             # Extract other details
             description = obj.get('description', '')
             description_parts = description.split(',') if description else []
             medium = description_parts[0].strip() if len(description_parts) > 0 else ''
             dimensions = ','.join(description_parts[1:]).strip() if len(description_parts) > 1 else ''
             date = obj.get('date_display')
+
+            if (not date):
+                date = title_date
 
             # Use atomic transaction to prevent race conditions
             @sync_to_async

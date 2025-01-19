@@ -134,7 +134,7 @@ function Favorites() {
                 <Link to="/" className="top-right-link">Home</Link>
             </div>
 
-            <h1>Your Favorites</h1>
+            <h2>Your Favorites</h2>
             {favorites.length === 0 ? (
                 <p>You have no favorites yet. Start liking artworks!</p>
             ) : (
@@ -169,6 +169,7 @@ function Favorites() {
                             <div className="detail-item"><strong>Date:</strong> {selectedArtwork.date}</div>
                             <div className="detail-item"><strong>Dimensions:</strong> {selectedArtwork.dimensions}</div>
                             <div className="detail-item"><strong>Medium:</strong> {selectedArtwork.medium}</div>
+                            <div className="detail-item"><strong>Source:</strong> {selectedArtwork.api_source}</div>
                             <div className="modal-buttons">
                                 <LikeButton
                                     isLiked={likedArtworks.includes(selectedArtwork.image_url)}

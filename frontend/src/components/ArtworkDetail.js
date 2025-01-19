@@ -68,6 +68,10 @@ function ArtworkDetail() {
         navigate(-1);  // Go back to the previous page
     };
 
+    const linkHome = () => {
+        navigate('/'); // Redirect to home page
+    };
+
     if (!artwork) return <div>Loading...</div>;
 
     return (
@@ -90,9 +94,11 @@ function ArtworkDetail() {
                             isLiked={likedArtworks.includes(artwork.image_url)}
                             onToggle={() => toggleLike(artwork.image_url)}
                         />
-
-                        <button onClick={handleBack} className="close-button">
-                            Back
+                        <button className="close-button">
+                            Share on X
+                        </button>
+                        <button onClick={linkHome} className="close-button">
+                            Home
                         </button>
                     </div>
                 </div>
