@@ -10,7 +10,6 @@ const checkImageUrlByLoading = (url) => {
 };
 
 const checkImageChain = async (urls) => {
-    // Try each URL in order until one works
     for (let url of urls) {
         const valid = await checkImageUrlByLoading(url);
         if (valid) return valid;
@@ -19,40 +18,47 @@ const checkImageChain = async (urls) => {
 };
 
 function ArtworkImage({ artwork, onInvalidImage }) {
-    const [validUrl, setValidUrl] = useState('');
+    const [validUrl, setValidUrl] = useState(null);  // Changed from '' to null
 
     useEffect(() => {
+        let isMounted = true;  // To prevent state updates on unmounted components
+
         const { image_url, api_source } = artwork;
 
-        if (api_source === 'Art Institute of Chicago') {
-            const fallbackSizes = ['1686', '843', '600', '400', '200'];
-            const fallbackUrls = fallbackSizes.map(size =>
-                image_url.replace(/full\/.*?\/0/, `full/${size},/0`)
-            );
-            checkImageChain(fallbackUrls).then(url => {
-                if (url) {
-                    setValidUrl(url);
-                } else {
-                    onInvalidImage(artwork.image_url);
-                }
-            });
-        } else if (api_source === 'Artsy') {
-            const artsyfallbackSizes = ['normalized', 'larger', 'large', 'medium', 'square'];
-            const artsyfallbackUrls = artsyfallbackSizes.map(size =>
-                image_url.replace(/[^/]+$/, `${size}.jpg`)
-            );
-            checkImageChain(artsyfallbackUrls).then(url => {
-                if (url) {
-                    setValidUrl(url);
-                } else {
-                    onInvalidImage(artwork.image_url);
-                }
-            });
-        } else {
-            setValidUrl(image_url);
-        }
-    }, [artwork, onInvalidImage]);
+        const loadImage = async () => {
+            let urlToUse = image_url;
 
+            if (api_source === 'Art Institute of Chicago') {
+                const fallbackSizes = ['1686', '843', '600', '400', '200'];
+                const fallbackUrls = fallbackSizes.map(size =>
+                    image_url.replace(/full\/.*?\/0/, `full/${size},/0`)
+                );
+
+                urlToUse = await checkImageChain(fallbackUrls);
+            } else if (api_source === 'Artsy') {
+                const artsyFallbackSizes = ['normalized', 'larger', 'large', 'medium', 'square'];
+                const artsyFallbackUrls = artsyFallbackSizes.map(size =>
+                    image_url.replace(/[^/]+$/, `${size}.jpg`)
+                );
+
+                urlToUse = await checkImageChain(artsyFallbackUrls);
+            }
+
+            if (isMounted) {
+                if (urlToUse) {
+                    setValidUrl(urlToUse);
+                } else {
+                    onInvalidImage(image_url);  // Notify parent component if all URLs fail
+                }
+            }
+        };
+
+        loadImage();
+
+        return () => {
+            isMounted = false;  // Cleanup to prevent memory leaks
+        };
+    }, [artwork, onInvalidImage]);
     if (!validUrl) return null;
 
     return (

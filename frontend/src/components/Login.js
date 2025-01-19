@@ -37,6 +37,7 @@ function Login() {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('Login response:', data);
                 localStorage.setItem('accessToken', data.access); // Save access token
                 localStorage.setItem('refreshToken', data.refresh); // Save refresh token
                 localStorage.setItem('username', formData.username); // Save username

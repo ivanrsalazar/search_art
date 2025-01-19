@@ -621,6 +621,7 @@ h1 {
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin-right: 10px;
+    width: 80%;
 }
 
 .share-button:hover {
@@ -630,7 +631,47 @@ h1 {
 .modal-buttons {
     margin-top: 20px;
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    /* Stack buttons vertically */
+    gap: 15px;
+    /* Add spacing between buttons */
+    align-items: center;
+    /* Center buttons within the container */
+    width: 33%;
+    /* Restrict the container width to one-third */
+    position: absolute;
+    /* Position buttons in the right one-third */
+    top: 50%;
+    /* Place near the right edge */
+    transform: translateY(-50%);
+    /* Adjust vertical centering */
+}
+
+.modal-buttons button {
+    width: 80%;
+    /* Make buttons stretch to the container's width */
+    padding: 15px;
+    /* Increase button height */
+    font-size: 16px;
+    /* Make text more prominent */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-buttons button:hover {
+    background-color: #0056b3;
+    /* Darker blue on hover */
+    transform: scale(1.02);
+    /* Slight hover effect */
+}
+
+.modal-buttons button:active {
+    transform: scale(1);
+    /* Remove hover effect on click */
 }
 
 .artwork-details .like-button {

@@ -1,39 +1,49 @@
+// src/components/Favorites.js
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import LikeButton from './LikeButton';
 import '../assets/styles/Home.css';
-import { AuthContext } from '../AuthContext';  // Import for authentication
+import { AuthContext } from '../AuthContext';
+import axiosInstance from '../api/axiosInstance';
+import ArtworkImage from './ArtworkImage';
+
+
 
 function Favorites() {
     const [favorites, setFavorites] = useState([]);
     const [error, setError] = useState(null);
-    const [selectedArtwork, setSelectedArtwork] = useState(null);  // For modal
-    const [likedArtworks, setLikedArtworks] = useState([]);  // Track likes
-    const [isTwitterAuthenticated, setIsTwitterAuthenticated] = useState(false);  // Twitter auth state
+    const [selectedArtwork, setSelectedArtwork] = useState(null);  // For modal display
+    const [likedArtworks, setLikedArtworks] = useState([]);         // Track liked artwork URLs
+    const [artworks, setArtworks] = useState([]);
+    const [isTwitterAuthenticated, setIsTwitterAuthenticated] = useState(false);
 
     const { loggedIn } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    // Fetch user's liked artworks
+    const removeInvalidArtwork = (invalidUrl) => {
+        setArtworks((prevArtworks) =>
+            prevArtworks.filter((artwork) => artwork.image_url !== invalidUrl)
+        );
+    };
+
+    // Fetch user's liked artworks from the API
     useEffect(() => {
         const fetchFavorites = async () => {
             try {
-                const url = `http://localhost:8000/api/likes/user/`;
-                const response = await axios.get(url, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                    }
-                });
-
+                const response = await axiosInstance.get('/likes/user/');
                 if (response.data && Array.isArray(response.data)) {
-                    const artworks = response.data.map(like => like.artwork);
+                    const artworks = response.data.map((like) => like.artwork);
                     setFavorites(artworks);
-                    setLikedArtworks(artworks.map(artwork => artwork.image_url));
+                    setLikedArtworks(artworks.map((artwork) => artwork.image_url));
                 }
             } catch (err) {
-                setError('Error fetching favorites.');
-                console.error(err);
+                if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                    // Let the interceptor handle redirection. No need to set an error.
+                    return;
+                }
+                // For all other errors, show the error message
+                console.error('Error fetching favorites:', err);
+                setError('Error fetching favorites. Please try again later.');
             }
         };
 
@@ -42,12 +52,12 @@ function Favorites() {
         }
     }, [loggedIn]);
 
-    // Open modal
+    // Open the artwork modal for detailed view
     const openArtworkDetailModal = (artwork) => {
         setSelectedArtwork(artwork);
     };
 
-    // Close modal
+    // Close the modal
     const closeArtworkDetailModal = () => {
         setSelectedArtwork(null);
     };
@@ -55,25 +65,32 @@ function Favorites() {
     // Like/Unlike functionality
     const toggleLike = (imageUrl) => {
         if (likedArtworks.includes(imageUrl)) {
-            axios.delete(`http://localhost:8000/api/likes/${encodeURIComponent(imageUrl)}/`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-            }).then(() => {
-                setLikedArtworks(prev => prev.filter(url => url !== imageUrl));
-                setFavorites(prev => prev.filter(art => art.image_url !== imageUrl));  // Remove from favorites
-            }).catch(err => console.error('Error unliking artwork:', err));
+            axiosInstance
+                .delete(`/likes/${encodeURIComponent(imageUrl)}/`)
+                .then(() => {
+                    setLikedArtworks((prev) => prev.filter((url) => url !== imageUrl));
+                    setFavorites((prev) => prev.filter((art) => art.image_url !== imageUrl));  // Remove from favorites list
+                })
+                .catch((err) => {
+                    console.error('Error unliking artwork:', err);
+                });
         } else {
-            axios.post(`http://localhost:8000/api/likes/`, { image_url: imageUrl }, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-            }).then(() => {
-                setLikedArtworks(prev => [...prev, imageUrl]);
-            }).catch(err => console.error('Error liking artwork:', err));
+            axiosInstance
+                .post('/likes/', { image_url: imageUrl })
+                .then(() => {
+                    setLikedArtworks((prev) => [...prev, imageUrl]);
+                })
+                .catch((err) => {
+                    console.error('Error liking artwork:', err);
+                });
         }
     };
 
     // Twitter authentication
     const handleTwitterAuth = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/api/twitter/login/');
+            const response = await axiosInstance.get('/twitter/login/');
+            // Open Twitter auth in a new window
             window.open(response.data.authorization_url, '_blank', 'width=600,height=400');
         } catch (error) {
             console.error('Error during Twitter login:', error);
@@ -90,7 +107,7 @@ function Favorites() {
         }
 
         try {
-            const response = await axios.post('http://localhost:8000/api/twitter/post/', {
+            const response = await axiosInstance.post('/twitter/post/', {
                 title: artwork.title,
                 artist: artwork.artist,
                 medium: artwork.medium,
@@ -129,11 +146,7 @@ function Favorites() {
                             onClick={() => openArtworkDetailModal(artwork)}
                         >
                             <div className="artwork-item">
-                                <img
-                                    src={artwork.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}
-                                    alt={artwork.title}
-                                    className="artwork-image"
-                                />
+                                <ArtworkImage artwork={artwork} onInvalidImage={removeInvalidArtwork} />
                                 <div className="artwork-title-overlay">
                                     <h3 className="artwork-title">{artwork.title}</h3>
                                 </div>
@@ -143,16 +156,12 @@ function Favorites() {
                 </div>
             )}
 
-            {/* Modal */}
+            {/* Modal for artwork details */}
             {selectedArtwork && (
                 <div className="artwork-modal" onClick={closeArtworkDetailModal}>
                     <div className="artwork-modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="artwork-image">
-                            <img
-                                src={selectedArtwork.image_url}
-                                alt={selectedArtwork.title}
-                                className="artwork-image"
-                            />
+                            <ArtworkImage artwork={selectedArtwork} onInvalidImage={removeInvalidArtwork} />
                         </div>
                         <div className="artwork-details">
                             <h2>{selectedArtwork.title}</h2>
@@ -160,16 +169,12 @@ function Favorites() {
                             <div className="detail-item"><strong>Date:</strong> {selectedArtwork.date}</div>
                             <div className="detail-item"><strong>Dimensions:</strong> {selectedArtwork.dimensions}</div>
                             <div className="detail-item"><strong>Medium:</strong> {selectedArtwork.medium}</div>
-
                             <div className="modal-buttons">
                                 <LikeButton
                                     isLiked={likedArtworks.includes(selectedArtwork.image_url)}
                                     onToggle={() => toggleLike(selectedArtwork.image_url)}
                                 />
-                                <button
-                                    onClick={() => shareOnTwitter(selectedArtwork)}
-                                    className="share-button"
-                                >
+                                <button onClick={() => shareOnTwitter(selectedArtwork)} className="close-button">
                                     Share on X
                                 </button>
                                 <button onClick={closeArtworkDetailModal} className="close-button">
