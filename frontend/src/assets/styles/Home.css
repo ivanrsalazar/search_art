@@ -51,7 +51,7 @@ body {
 }
 
 .top-right-link:hover {
-    color: #0056b3;
+    color: darkred;
     text-decoration: underline;
 }
 
@@ -99,7 +99,7 @@ body {
 }
 
 .search-input:focus {
-    border-color: #007bff;
+    border-color: gray;
 }
 
 .search-button {
@@ -111,7 +111,7 @@ body {
     font-size: 18px;
     border: 1px solid #ccc;
     border-left: none;
-    background-color: #007bff;
+    background-color: gray;
     color: white;
     cursor: pointer;
     border-radius: 0 4px 4px 0;
@@ -119,8 +119,8 @@ body {
 }
 
 .search-button:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
+    background-color: darkgray;
+
 }
 
 .search-button:active {
@@ -133,11 +133,12 @@ body {
     text-align: center;
     margin: 10px 0;
     font-size: 16px;
-    color: #007bff;
+    color: gray;
     background: none;
     border: none;
     cursor: pointer;
     transition: color 0.3s ease;
+    width: 60%;
 }
 
 .back-to-search:hover {
@@ -343,7 +344,7 @@ body {
         width: 30px;
         height: 30px;
         border: 4px solid #f3f3f3;
-        border-top: 4px solid #007bff;
+        border-top: 4px solid darkred;
     }
 
     .artwork-title {
@@ -463,14 +464,14 @@ body {
 
 .top-right-link {
     text-decoration: none;
-    color: #007bff;
+    color: darkred;
     font-weight: bold;
     font-size: 16px;
     transition: color 0.3s ease, text-decoration 0.3s ease;
 }
 
 .top-right-link:hover {
-    color: #0056b3;
+    color: gray;
     text-decoration: underline;
 }
 
@@ -492,7 +493,7 @@ body {
 .register-link,
 .logout-button {
     text-decoration: none;
-    color: #007bff;
+    color: darkred;
     font-weight: bold;
     cursor: pointer;
     background: none;
@@ -511,7 +512,7 @@ body {
 
 /* Username Display */
 .username-display {
-    color: #007bff;
+    color: darkred;
     font-weight: bold;
     font-size: 16px;
 }
@@ -619,7 +620,7 @@ body {
 
 /* Dropdown Styling */
 .dropdown-content .dropdown-link {
-    color: #007bff;
+    color: darkred;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
@@ -634,7 +635,7 @@ body {
 .dropdown-content .dropdown-link:hover {
     background-color: #f1f1f1;
     /* Highlight on hover */
-    color: #0056b3;
+    color: darkred;
 }
 
 /* Ensure no opacity issues */
@@ -646,7 +647,7 @@ body {
 
 .username-display {
     cursor: pointer;
-    color: #007bff;
+    color: darkred;
     font-weight: bold;
 }
 
@@ -672,12 +673,18 @@ body {
 
 .modal-buttons {
     display: flex;
+    /* Enables flexbox */
     flex-direction: column;
-    /* Ensures buttons are stacked */
+    /* Stacks buttons vertically */
+    align-items: center;
+    /* Centers buttons horizontally */
+    justify-content: center;
+    /* Centers buttons vertically within the container */
     gap: 10px;
-    /* Adds spacing between buttons */
+    /* Adds space between buttons */
+    margin-top: 20px;
+    /* Adds some space between details and buttons */
     width: 100%;
-
 }
 
 .modal-buttons button {
@@ -687,12 +694,11 @@ body {
     /* Increase button height */
     font-size: 16px;
     /* Make text more prominent */
-    background-color: #007bff;
+    background-color: gray;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    justify-content: center;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
@@ -709,9 +715,8 @@ body {
 }
 
 .artwork-details .like-button {
-    margin-top: 10px;
     padding: 10px;
-    background-color: red;
+    background-color: gray;
     color: white;
     border: none;
     border-radius: 5px;
@@ -786,4 +791,54 @@ body {
 
 .login-button:hover {
     background-color: #0056b3;
+}
+
+/* ======= Bottom Links ======= */
+.bottom-links {
+    display: flex;
+    /* Use flex to align links properly */
+    justify-content: space-between;
+    /* Push links to the left and right corners */
+    margin-top: 20px;
+    /* Add spacing above the links */
+    padding: 0 20px;
+    /* Add padding to keep links away from edges */
+    width: 100%;
+    /* Ensure links span the width of the container */
+}
+
+.bottom-link {
+    text-decoration: none;
+    color: darkred;
+    font-weight: bold;
+    font-size: 16px;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.bottom-link:hover {
+    color: darkred;
+    text-decoration: underline;
+}
+
+.load-more-button {
+    display: block;
+    text-align: center;
+    margin-top: 30px;
+    font-size: 16px;
+    color: gray;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    width: 60%;
+}
+
+.load-more-button:hover {
+    color: white;
+    background: gray;
+}
+
+.back-to-search:hover {
+    color: white;
+    background: gray;
 }
