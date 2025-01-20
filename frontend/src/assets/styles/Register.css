@@ -1,49 +1,102 @@
-/* Register.css */
+/* Define CSS variables for consistency */
+:root {
+    --primary-color: white --background-color: #f0f4f8;
+    --form-bg-color: #ffffff;
+    --text-color: #333;
+    --border-color: #dcdcdc;
+    --button-color: gray;
+    --button-hover-color: gray;
+    --link-color: #007bff;
+    --link-hover-color: #0056b3;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Apply global font and background */
+body {
+    background-color: var(--primary-color);
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: var(--text-color);
+}
+
+/* Centered container for the form */
 .register-container {
+    background-color: var(--form-bg-color);
     max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.register-container h1 {
+    width: 90%;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     text-align: center;
-    margin-bottom: 20px;
 }
 
+/* Header styling */
+.register-container h1 {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+/* Form layout */
 .register-container form {
     display: flex;
     flex-direction: column;
+    gap: 15px;
 }
 
-.register-container form div {
-    margin-bottom: 15px;
-}
-
-.register-container form label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
+/* Input fields */
 .register-container form input {
-    padding: 10px;
-    border: 1px solid #ccc;
+    padding: 12px;
+    font-size: 1em;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
-    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.register-container form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(0, 75, 141, 0.5);
+}
+
+/* Button styling */
 .register-container form button {
-    padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
+    padding: 12px;
+    font-size: 1em;
+    background-color: var(--button-color);
     border: none;
     border-radius: 5px;
-    font-size: 16px;
+    color: white;
     cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .register-container form button:hover {
-    background-color: #0056b3;
+    background-color: var(--button-hover-color);
+    transform: translateY(-2px);
+}
+
+/* Link below the form */
+.register-container .form-link {
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.register-container .form-link a {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.register-container .form-link a:hover {
+    color: var(--link-hover-color);
+    text-decoration: underline;
 }

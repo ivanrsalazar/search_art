@@ -1,6 +1,5 @@
-// src/components/Login.js
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../assets/styles/Login.css';
 import { AuthContext } from '../AuthContext'; // Import AuthContext
 
@@ -57,6 +56,7 @@ function Login() {
     return (
         <div className="login-container">
             <h1>Login</h1>
+            {error && <p className="error-message">{error}</p>}
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label htmlFor="username">Username</label>
@@ -66,6 +66,7 @@ function Login() {
                         name="username"
                         value={formData.username}
                         onChange={handleChange}
+                        placeholder="Enter your username..."
                         required
                     />
                 </div>
@@ -77,12 +78,17 @@ function Login() {
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
+                        placeholder="Enter your password..."
                         required
                     />
                 </div>
-                {error && <p className="error-message">{error}</p>}
-                <button type="submit">Login</button>
+                <button type="submit">Log in</button>
             </form>
+            <div className="form-link">
+                <p>
+                    Don't have an account? <Link to="/register">Register here.</Link>
+                </p>
+            </div>
         </div>
     );
 }

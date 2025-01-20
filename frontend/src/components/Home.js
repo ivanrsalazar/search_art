@@ -8,7 +8,7 @@ import LikeButton from './LikeButton';
 import ArtworkImage from './ArtworkImage';
 
 function Home() {
-    const { loggedIn, username, logout } = useContext(AuthContext);
+    const { loggedIn, username, logout, login } = useContext(AuthContext); // Assume you have a login method in your context
     const location = useLocation();
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
@@ -24,6 +24,12 @@ function Home() {
     const [allLoaded, setAllLoaded] = useState(false);
     const [selectedArtwork, setSelectedArtwork] = useState(null);
 
+    // New state for our secondary login modal
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [loginUsername, setLoginUsername] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [loginError, setLoginError] = useState('');
+
     const artworkUrls = useRef(new Set());
     const isFetching = useRef(false);
 
@@ -37,7 +43,8 @@ function Home() {
 
     const toggleLike = (imageUrl) => {
         if (!loggedIn) {
-            navigate('/login');
+            // Instead of redirecting to login, open the login modal
+            setShowLoginModal(true);
             return;
         }
 
@@ -170,13 +177,60 @@ function Home() {
         artworkUrls.current = new Set();
     };
 
-    // Modal close handler
+    // Modal close handler for artwork detail modal
     const closeArtworkDetailModal = () => {
         setSelectedArtwork(null);
     };
 
+    // New handler for closing the login modal
+    const closeLoginModal = () => {
+        setShowLoginModal(false);
+        setLoginError('');
+        setLoginUsername('');
+        setLoginPassword('');
+    };
+
+    const handleLoginSubmit = async (e) => {
+        e.preventDefault();
+        setLoginError(null);
+
+        try {
+            const response = await fetch('http://localhost:8000/api/login/', { // Ensure this URL is correct
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: loginUsername,
+                    password: loginPassword,
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Login response (from modal):', data);
+                // Store tokens and username as in Login.js
+                localStorage.setItem('accessToken', data.access);
+                localStorage.setItem('refreshToken', data.refresh);
+                localStorage.setItem('username', loginUsername);
+
+                // Update AuthContext
+                if (typeof login === 'function') {
+                    login(loginUsername);
+                }
+                closeLoginModal();
+            } else {
+                const data = await response.json();
+                setLoginError(data.error || 'Login failed');
+            }
+        } catch (err) {
+            console.error('Login error (from modal):', err);
+            setLoginError('An unexpected error occurred.');
+        }
+    };
+
     return (
-        <div className={`home-container ${showSearch ? "initial-home" : ""}`}>
+        <div id="top" className={`home-container ${showSearch ? "initial-home" : ""}`}>
             <div className="top-right-links">
                 {loggedIn ? (
                     <div className="dropdown">
@@ -232,7 +286,7 @@ function Home() {
                 <button onClick={handleLoadMore} className="load-more-button">Load More</button>
             )}
 
-            {/* Modal rendering block */}
+            {/* Artwork Detail Modal */}
             {selectedArtwork && (
                 <div className="artwork-modal" onClick={closeArtworkDetailModal}>
                     <div className="artwork-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -263,6 +317,46 @@ function Home() {
                 </div>
             )}
 
+            {/* Login Modal */}
+            {showLoginModal && (
+                <div className="login-modal" onClick={closeLoginModal}>
+                    <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h2>Login</h2>
+                        {loginError && <p className="error">{loginError}</p>}
+                        <form onSubmit={handleLoginSubmit} className="login-form">
+                            <input
+                                type="text"
+                                value={loginUsername}
+                                onChange={(e) => setLoginUsername(e.target.value)}
+                                placeholder="Username"
+                                className="login-input"
+                                required
+                            />
+                            <input
+                                type="password"
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                placeholder="Password"
+                                className="login-input"
+                                required
+                            />
+                            <button type="submit" className="login-button">Login</button>
+                        </form>
+                        <p>
+                            Don't have an account? <Link to="/register" onClick={closeLoginModal}>Register here</Link>
+                        </p>
+                        <button onClick={closeLoginModal} className="close-button">Close</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Bottom Links: Back to Search and Back to Top */}
+            {!allLoaded && !loading && searchTerm.trim() && (
+                <div className="bottom-links">
+                    <Link to="/" onClick={handleBackToSearch} className="bottom-link">Back to Search</Link>
+                    <a href="#top" className="bottom-link">Back to Top</a>
+                </div>
+            )}
         </div>
     );
 }
