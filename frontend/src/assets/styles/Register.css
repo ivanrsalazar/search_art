@@ -1,19 +1,20 @@
 /* Define CSS variables for consistency */
-:root {
-    --primary-color: white --background-color: #f0f4f8;
+.register-page {
+    --primary-color: darkred;
+    --background-color: #f0f4f8;
     --form-bg-color: #ffffff;
     --text-color: #333;
     --border-color: #dcdcdc;
     --button-color: gray;
-    --button-hover-color: gray;
-    --link-color: #007bff;
-    --link-hover-color: #0056b3;
+    --button-hover-color: darkred;
+    --link-color: red;
+    --link-hover-color: darkred;
     --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Apply global font and background */
-body {
-    background-color: var(--primary-color);
+/* Instead of styling the global body, we scope the layout to the register page container */
+.register-page {
+    background-color: var(--background-color);
     font-family: var(--font-family);
     margin: 0;
     padding: 0;
@@ -25,7 +26,7 @@ body {
 }
 
 /* Centered container for the form */
-.register-container {
+.register-page .register-container {
     background-color: var(--form-bg-color);
     max-width: 400px;
     width: 90%;
@@ -36,21 +37,26 @@ body {
 }
 
 /* Header styling */
-.register-container h1 {
+.register-page .register-container h1 {
     font-size: 1.8em;
     margin-bottom: 20px;
     color: var(--primary-color);
 }
 
 /* Form layout */
-.register-container form {
+.register-page .register-container form {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
+/* Form Group */
+.register-page .register-container .form-group {
+    text-align: left;
+}
+
 /* Input fields */
-.register-container form input {
+.register-page .register-container form input {
     padding: 12px;
     font-size: 1em;
     border: 1px solid var(--border-color);
@@ -60,14 +66,14 @@ body {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.register-container form input:focus {
+.register-page .register-container form input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 5px rgba(0, 75, 141, 0.5);
 }
 
 /* Button styling */
-.register-container form button {
+.register-page .register-container form button {
     padding: 12px;
     font-size: 1em;
     background-color: var(--button-color);
@@ -78,25 +84,45 @@ body {
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.register-container form button:hover {
+.register-page .register-container form button:hover {
     background-color: var(--button-hover-color);
     transform: translateY(-2px);
 }
 
 /* Link below the form */
-.register-container .form-link {
+.register-page .register-container .form-link {
     margin-top: 20px;
     font-size: 0.9em;
 }
 
-.register-container .form-link a {
+.register-page .register-container .form-link a {
     color: var(--link-color);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
-.register-container .form-link a:hover {
+.register-page .register-container .form-link a:hover {
     color: var(--link-hover-color);
+    text-decoration: underline;
+}
+
+/* Top-right Home link styles */
+.register-page .top-right-link-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.register-page .top-right-link {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 16px;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.register-page .top-right-link:hover {
+    color: darkred;
     text-decoration: underline;
 }

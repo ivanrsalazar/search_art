@@ -1,44 +1,143 @@
-.login-container {
+/* Define CSS variables for consistency */
+.login-page {
+    --primary-color: darkred;
+    --background-color: #f0f4f8;
+    --form-bg-color: #ffffff;
+    --text-color: #333;
+    --border-color: #dcdcdc;
+    --button-color: gray;
+    --button-hover-color: darkred;
+    --link-color: red;
+    --link-hover-color: darkred;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Instead of styling the global body, we scope the layout to the login page container */
+.login-page {
+    background-color: var(--background-color);
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: var(--text-color);
+}
+
+/* Centered container for the form */
+.login-page .login-container {
+    background-color: var(--form-bg-color);
     max-width: 400px;
-    margin: 0 auto;
-    padding: 1rem;
-    background-color: #f9f9f9;
+    width: 90%;
+    padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
 }
 
-.form-group {
-    margin-bottom: 1rem;
+/* Header styling */
+.login-page .login-container h1 {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    color: var(--primary-color);
 }
 
-.form-group label {
+/* Form Layout */
+.login-page .login-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Form Group */
+.login-page .login-container .form-group {
+    text-align: left;
+}
+
+/* Labels */
+.login-page .login-container .form-group label {
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-bottom: 5px;
     display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
 }
 
-.form-group input {
+/* Input fields */
+.login-page .login-container form input {
+    padding: 12px;
+    font-size: 1em;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.error-message {
-    color: red;
-    margin-top: 0.5rem;
+.login-page .login-container form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(0, 75, 141, 0.5);
 }
 
-button {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #007bff;
-    color: white;
+/* Button styling */
+.login-page .login-container form button {
+    padding: 12px;
+    font-size: 1em;
+    background-color: var(--button-color);
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
+    color: white;
     cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-button:hover {
-    background-color: #0056b3;
+.login-page .login-container form button:hover {
+    background-color: var(--button-hover-color);
+    transform: translateY(-2px);
+}
+
+/* Error message styling */
+.login-page .login-container .error-message {
+    color: var(--button-hover-color);
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+/* Link below the form */
+.login-page .login-container .form-link {
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.login-page .login-container .form-link a {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.login-page .login-container .form-link a:hover {
+    color: var(--link-hover-color);
+    text-decoration: underline;
+}
+
+/* Top-right Home link styles */
+.login-page .top-right-link-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.login-page .top-right-link {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 16px;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.login-page .top-right-link:hover {
+    color: darkred;
+    text-decoration: underline;
 }

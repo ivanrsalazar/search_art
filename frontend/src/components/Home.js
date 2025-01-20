@@ -86,7 +86,7 @@ function Home() {
                     return true;
                 });
                 setArtworks((prevArtworks) => [...prevArtworks, ...newArtworks]);
-                if (newArtworks.length < 10) {
+                if (newArtworks.length == 10) {
                     setAllLoaded(true);
                 }
             } else {
@@ -351,7 +351,7 @@ function Home() {
             )}
 
             {/* Bottom Links: Back to Search and Back to Top */}
-            {!allLoaded && !loading && searchTerm.trim() && (
+            {!loading && searchTerm.trim() && (
                 <div className="bottom-links">
                     <Link to="/" onClick={handleBackToSearch} className="bottom-link">Back to Search</Link>
                     <a href="#top" className="bottom-link">Back to Top</a>

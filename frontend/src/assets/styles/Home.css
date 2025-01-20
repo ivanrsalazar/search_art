@@ -201,15 +201,21 @@ body {
     height: 300px;
     overflow: hidden;
     display: flex;
+    /* Flexbox ensures centering */
     justify-content: center;
+    /* Horizontally center the image */
     align-items: center;
+    /* Vertically center the image */
     background-color: #fff;
 }
 
 .artwork-image {
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    /* Prevents the image from overflowing horizontally */
+    max-height: 100%;
+    /* Prevents the image from overflowing vertically */
     object-fit: contain;
+    /* Ensures the image retains its aspect ratio */
     display: block;
     transition: transform 0.3s ease;
 }
@@ -790,6 +796,14 @@ body {
 }
 
 .login-button:hover {
+    background-color: #0056b3;
+}
+
+.login-modal .close-button {
+    background-color: gray;
+}
+
+.login-modal .close-button:hover {
     background-color: #0056b3;
 }
 
