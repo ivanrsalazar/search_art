@@ -17,7 +17,7 @@ function ArtworkDetail() {
     useEffect(() => {
         const fetchArtwork = async () => {
             try {
-                const response = await axios.get(`http://localhost:8000/api/artwork/${image_hash}/`);
+                const response = await axios.get(`http://localhost:8001/api/artwork/${image_hash}/`);
                 setArtwork(response.data);
             } catch (error) {
                 console.error("Error fetching artwork:", error);
@@ -31,7 +31,7 @@ function ArtworkDetail() {
         const fetchLikedArtworks = async () => {
             if (loggedIn) {
                 try {
-                    const response = await axios.get(`http://localhost:8000/api/likes/user/`, {
+                    const response = await axios.get(`http://localhost:8001/api/likes/user/`, {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                         }
@@ -50,13 +50,13 @@ function ArtworkDetail() {
     // ✅ Like/Unlike functionality
     const toggleLike = (imageUrl) => {
         if (likedArtworks.includes(imageUrl)) {
-            axios.delete(`http://localhost:8000/api/likes/${encodeURIComponent(imageUrl)}/`, {
+            axios.delete(`http://localhost:8001/api/likes/${encodeURIComponent(imageUrl)}/`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
             }).then(() => {
                 setLikedArtworks(prev => prev.filter(url => url !== imageUrl));
             }).catch(err => console.error('Error unliking artwork:', err));
         } else {
-            axios.post(`http://localhost:8000/api/likes/`, { image_url: imageUrl }, {
+            axios.post(`http://localhost:8001/api/likes/`, { image_url: imageUrl }, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
             }).then(() => {
                 setLikedArtworks(prev => [...prev, imageUrl]);

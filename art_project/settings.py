@@ -12,9 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
+from corsheaders.defaults import default_headers, default_methods
+
 HARVARD_API_KEY = os.environ.get('HARVARD_API_KEY')
 ARTSY_PUBLIC_KEY = os.getenv('ARTSY_PUBLIC_KEY')
 ARTSY_PRIVATE_KEY = os.getenv('ARTSY_PRIVATE_KEY')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,6 +32,7 @@ SECRET_KEY = 'django-insecure-hv$k7)esy&e(xk+-*qpa(27h$0o%5)nco)pkr1#@lqps70t5pm
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
 ASGI_APPLICATION = 'art_project.asgi.application'
 
 # Application definition
@@ -46,12 +51,10 @@ INSTALLED_APPS = [
     # Your apps
     'artworks',
 ]
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -68,15 +71,37 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default authentication backend
 ]
+
 ROOT_URLCONF = 'art_project.urls'
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3002',  # React development server
+    'http://localhost:3000',  # React development server
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'content-type',
+    'authorization',
+    'x-requested-with',
+]
+
+CORS_ALLOW_METHODS = list(default_methods) + [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Optional: Temporarily allow all origins for debugging
+# CORS_ALLOW_ALL_ORIGINS = True
 
 # Templates Configuration
 TEMPLATES = [
@@ -125,8 +150,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -148,15 +171,14 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'frontend', 'build'),  # For manifest.json and other root files
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')       # Directory to collect static files
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Directory to collect static files
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-from datetime import timedelta
-
+# JWT Settings
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),  # Adjust as needed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),

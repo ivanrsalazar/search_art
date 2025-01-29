@@ -86,7 +86,7 @@ function Home() {
                     return true;
                 });
                 setArtworks((prevArtworks) => [...prevArtworks, ...newArtworks]);
-                if (newArtworks.length == 10) {
+                if (newArtworks.length == 0) {
                     setAllLoaded(true);
                 }
             } else {
@@ -195,7 +195,7 @@ function Home() {
         setLoginError(null);
 
         try {
-            const response = await fetch('http://localhost:8000/api/login/', { // Ensure this URL is correct
+            const response = await fetch('http://localhost:8001/api/login/', { // Ensure this URL is correct
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
